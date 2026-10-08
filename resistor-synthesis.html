@@ -1,0 +1,1107 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Одна функція — дві структури | Електрична аналогія синтезу структури мереж</title>
+  <style>
+    :root {
+      --ink: #182837;
+      --muted: #526477;
+      --paper: #f3f6f8;
+      --line: #dbe3ea;
+      --a: #2858c5;
+      --b: #087e73;
+      --open: #a94e08;
+      --short: #7542b5;
+      --target: #e8f4ee;
+      --caution: #7d5200;
+      --caution-bg: #fdf3dc;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 "Segoe UI", Arial, sans-serif; }
+    button { font: inherit; cursor: pointer; }
+    button:focus-visible, summary:focus-visible { outline: 3px solid #2858c5; outline-offset: 4px; }
+    button { -webkit-tap-highlight-color: transparent; }
+    main { max-width: 1240px; margin: auto; padding: 24px 32px; }
+    .topline { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }
+    .eyebrow { margin: 0; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    .quiet-button { border: 1px solid #cbd7e1; background: transparent; border-radius: 9px; padding: 8px 14px; color: var(--ink); font-size: 14px; }
+    .quiet-button:hover { background: #e6edf3; }
+    .hero { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 20px; }
+    h1 { font-size: clamp(28px, 3.8vw, 44px); line-height: 1.12; letter-spacing: -.035em; margin: 0 0 12px; font-weight: 700; }
+    .intro { color: var(--muted); margin: 0; max-width: 720px; }
+    .target { flex: 0 0 148px; border-left: 3px solid var(--b); padding-left: 20px; }
+    .target span { display: block; color: var(--muted); font-size: 14px; }
+    .target strong { display: block; font-size: 38px; font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
+    .method { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; margin-bottom: 22px; font-size: 14px; }
+    .method span { display: flex; align-items: center; gap: 8px; }
+    .step { width: 25px; height: 25px; display: inline-grid; place-items: center; border: 1px solid #c5d2dd; border-radius: 50%; font-size: 12px; font-style: normal; }
+    .arrow { color: #8193a2; }
+    .controls { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px 22px; margin-bottom: 20px; }
+    .controls-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+    h2 { margin: 0; font-size: 19px; line-height: 1.3; font-weight: 650; }
+    .hint { color: var(--muted); font-size: 14px; margin: 5px 0 0; }
+    .presets { display: flex; gap: 7px; flex-wrap: wrap; }
+    .preset { border: 1px solid #cbd7e1; background: #fff; padding: 7px 12px; border-radius: 8px; font-size: 14px; color: var(--ink); min-height: 38px; }
+    .preset:hover { background: #f0f4f7; }
+    .preset[aria-pressed="true"] { border-color: #344c60; background: #344c60; color: #fff; }
+    .resistor-controls { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+    legend { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0; margin: 0 0 8px; }
+    .resistor-name { font-size: 17px; font-weight: 650; }
+    .state-value { font-size: 14px; color: var(--muted); font-weight: 500; }
+    .state-value[data-state="open"] { color: var(--open); }
+    .state-value[data-state="short"] { color: var(--short); }
+    .segmented { display: grid; grid-template-columns: 1.12fr 1.12fr .8fr; gap: 4px; background: #eef2f6; padding: 4px; border-radius: 10px; }
+    .state-button { border: 1px solid transparent; border-radius: 7px; background: transparent; color: #425769; padding: 8px 4px; min-height: 40px; font-size: 14px; line-height: 1.2; }
+    .state-button:hover { background: #e1e8ef; }
+    .state-button[aria-pressed="true"] { color: #244d8d; background: #fff; border-color: #cbd7e1; box-shadow: 0 1px 3px #203e5510; font-weight: 650; }
+    .state-button[data-state="open"][aria-pressed="true"] { color: var(--open); background: #fff4e8; border-color: #edcaac; }
+    .state-button[data-state="short"][aria-pressed="true"] { color: var(--short); background: #f4ecff; border-color: #d6bfef; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 22px; padding-top: 13px; color: var(--muted); font-size: 13px; }
+    .legend span { display: inline-flex; align-items: center; gap: 7px; }
+    .legend-mark { display: inline-block; width: 16px; height: 10px; }
+    .legend-mark.normal { border: 2px solid #486279; border-radius: 1px; }
+    .legend-mark.open { background: linear-gradient(to right, var(--open) 0 31%, transparent 31% 69%, var(--open) 69% 100%) center / 100% 3px no-repeat; }
+    .legend-mark.short { background: var(--short); height: 3px; }
+    .circuits { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+    .circuit { --accent: var(--a); background: #fff; border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 16px; padding: 20px 24px; min-width: 0; }
+    .circuit.b { --accent: var(--b); }
+    .circuit-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .structure-id { font-size: 12px; text-transform: uppercase; letter-spacing: .09em; font-weight: 700; color: var(--accent); }
+    .result-tag { border-radius: 6px; padding: 3px 8px; color: var(--muted); background: #f0f3f6; font-size: 12px; font-weight: 600; }
+    .result-tag[data-kind="target"] { background: var(--target); color: #216142; }
+    .result-tag[data-kind="open"] { background: #fff1e5; color: var(--open); }
+    .result-tag[data-kind="short"] { background: #f3ecfc; color: var(--short); }
+    .result-tag[data-kind="caution"] { background: var(--caution-bg); color: var(--caution); }
+    .circuit h2 { margin-top: 9px; }
+    .formula { font-size: 18px; font-weight: 500; margin: 5px 0 0; color: var(--muted); }
+    .circuit-diagram { display: block; width: 100%; height: auto; max-height: 210px; margin: 12px 0; overflow: visible; }
+    .circuit-diagram .wire { fill: none; stroke: #8b9eae; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+    .circuit-diagram .node { fill: #728899; }
+    .circuit-diagram .terminal { fill: #fff; stroke: #728899; stroke-width: 2.5; }
+    .circuit-diagram .symbol { fill: #f3f6fd; stroke: var(--accent); stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+    .b .circuit-diagram .symbol { fill: #edf8f5; }
+    .circuit-diagram .symbol.open { fill: #fff; stroke: var(--open); }
+    .circuit-diagram .symbol.short { fill: none; stroke: var(--short); stroke-width: 4; }
+    .circuit-diagram .symbol.overload { fill: #fff6e0; stroke: #b07800; }
+    .circuit-diagram text { text-anchor: middle; font-family: "Segoe UI", Arial, sans-serif; fill: var(--ink); font-size: 22px; }
+    .circuit-diagram .ohms { font-size: 20px; fill: #526477; }
+    .circuit-diagram .ohms.open { fill: var(--open); }
+    .circuit-diagram .ohms.short { fill: var(--short); }
+    .circuit-diagram .ohms.overload { fill: var(--caution); font-weight: 600; }
+    .circuit-diagram .terminal-label { font-size: 20px; fill: var(--muted); }
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; border-top: 1px solid var(--line); padding-top: 15px; }
+    .metric-label { color: var(--muted); font-size: 13px; }
+    .resistance { font-size: clamp(30px, 3.2vw, 42px); font-weight: 650; letter-spacing: -.03em; line-height: 1.35; margin: 2px 0; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .unit { font-size: .55em; font-weight: 500; letter-spacing: 0; }
+    .deviation { margin: 8px 0 0; font-size: 22px; font-weight: 600; line-height: 1.35; font-variant-numeric: tabular-nums; }
+    .deviation[data-kind="open"] { color: var(--open); }
+    .deviation[data-kind="short"] { color: var(--short); }
+    .percent { color: var(--muted); font-size: 14px; margin: 2px 0 0; font-variant-numeric: tabular-nums; }
+    .calculation { margin-top: 15px; padding: 11px 13px; border-radius: 9px; background: #f5f7f9; }
+    .calculation small { display: block; font-size: 12px; color: var(--muted); margin-bottom: 3px; }
+    .calculation p { font-size: 15px; line-height: 1.6; margin: 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .card-note { margin: 10px 0 0; padding: 8px 12px; border-radius: 9px; background: var(--caution-bg); color: #6b4700; font-size: 14px; line-height: 1.45; }
+    .card-note[hidden] { display: none; }
+    .verdict { margin-top: 20px; border-radius: 14px; border: 1px solid #cfdfdc; background: #ecf4f2; padding: 18px 22px; display: flex; align-items: flex-start; gap: 14px; }
+    .verdict[data-winner="A"] { border-color: #d0ddf7; background: #edf3fe; }
+    .verdict[data-winner="B"] { border-color: #c5e3dc; background: #eaf6f2; }
+    .verdict[data-winner="none"] { border-color: #e2d6c9; background: #fcf3e9; }
+    .verdict[data-winner="caution"] { border-color: #ecd9b4; background: #fdf6e8; }
+    .verdict-symbol { flex: 0 0 36px; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 50%; color: #33565c; background: #fff9; font-size: 21px; font-weight: 600; }
+    .verdict h2 { margin: 0 0 5px; font-size: 19px; }
+    .verdict p { margin: 0; color: #42596c; font-size: 15px; }
+    .verdict .verdict-note { margin-top: 7px; font-size: 14px; color: var(--muted); }
+    .verdict .verdict-note[hidden] { display: none; }
+    .analysis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 20px; align-items: start; }
+    .panel { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 18px 22px; min-width: 0; }
+    .panel h2 { font-size: 18px; }
+    .dist-rows { display: grid; gap: 8px; margin: 14px 0 10px; }
+    .dist-row { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-items: center; gap: 10px; }
+    .dist-key { font-size: 14px; font-weight: 700; color: var(--a); }
+    .dist-key.b { color: var(--b); }
+    .dist-bar { display: flex; height: 30px; border-radius: 7px; overflow: hidden; background: #eef2f6; }
+    .seg { flex: 1 1 0; min-width: 0; display: grid; place-items: center; overflow: hidden; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; color: var(--ink); white-space: nowrap; }
+    .seg + .seg { box-shadow: inset 2px 0 0 #fff; }
+    .seg-short { background: #7542b5; color: #fff; }
+    .seg-down-2 { background: #a585d3; }
+    .seg-down-1 { background: #d9c8ef; }
+    .seg-target { background: #2f7a57; color: #fff; }
+    .seg-up-1 { background: #f3cfa8; }
+    .seg-up-2 { background: #d98a46; }
+    .seg-open { background: #a94e08; color: #fff; }
+    .dist-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 12px; color: var(--muted); font-size: 12px; }
+    .dist-legend span { display: inline-flex; align-items: center; gap: 6px; }
+    .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+    .dist-table { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .dist-table th, .dist-table td { padding: 6px 8px; border-top: 1px solid var(--line); text-align: right; }
+    .dist-table thead th { border-top: 0; padding-top: 0; font-size: 12px; font-weight: 700; color: var(--muted); }
+    .dist-table tbody th { text-align: left; font-weight: 500; color: var(--muted); }
+    .dist-table td { color: var(--muted); white-space: nowrap; }
+    .dist-table td.better { color: var(--ink); font-weight: 700; }
+    .dist-verdict { margin: 12px 0 0; color: #42596c; font-size: 15px; }
+    .dual-states { display: grid; gap: 8px; margin: 14px 0 12px; }
+    .dual-line { display: grid; grid-template-columns: 26px minmax(0, 1fr); align-items: start; gap: 6px; }
+    .dual-label { font-weight: 700; font-style: italic; line-height: 24px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { line-height: 20px; }
+    .chip { border-radius: 6px; padding: 2px 8px; background: #f0f3f6; color: #425769; font-size: 13px; }
+    .chip[data-state="open"] { background: #fff1e5; color: var(--open); }
+    .chip[data-state="short"] { background: #f3ecfc; color: var(--short); }
+    .identity { margin: 4px 0 0; font-size: 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .dual-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 14px; }
+    .dual-actions .hint { margin: 0; }
+    .action-button { border: 1px solid #344c60; background: #344c60; color: #fff; border-radius: 8px; padding: 7px 14px; min-height: 38px; font-size: 14px; }
+    .action-button:hover { background: #253848; }
+    .action-button:disabled { border-color: #cbd7e1; background: #e6edf3; color: #6b7c8b; cursor: default; }
+    .dual-note { margin: 12px 0 0; color: var(--muted); font-size: 14px; }
+    .principle { margin: 15px 2px 0; color: var(--muted); font-size: 14px; }
+    .principle strong { color: var(--ink); font-weight: 600; }
+    details { margin-top: 20px; border-top: 1px solid #d2dce5; padding-top: 14px; color: var(--muted); font-size: 14px; }
+    summary { color: var(--ink); font-weight: 600; cursor: pointer; width: fit-content; }
+    .model-notes { max-width: 980px; }
+    .model-notes p { margin: 10px 0 0; }
+    .model-notes strong { color: var(--ink); }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    noscript p { padding: 14px; background: #fff1e5; border: 1px solid #edcaac; border-radius: 9px; }
+    .network { margin-top: 20px; }
+    .net-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px 20px; }
+    .net-head .hint { max-width: 660px; }
+    .net-placements { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .net-placements[hidden] { display: none; }
+    .net-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
+    .net-card { --accent: var(--a); border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 14px; padding: 14px 18px; min-width: 0; }
+    .net-card.b { --accent: var(--b); }
+    .net-card h3 { margin: 8px 0 0; font-size: 17px; line-height: 1.3; font-weight: 650; }
+    .net-graph { display: block; width: 100%; height: auto; max-height: 190px; margin: 8px 0 4px; overflow: visible; }
+    .net-graph .edge { fill: none; stroke: #8b9eae; stroke-width: 3; stroke-linecap: round; }
+    .net-graph .edge.lost { stroke: var(--open); stroke-dasharray: 7 7; }
+    .net-graph .elabel { font-family: "Segoe UI", Arial, sans-serif; font-size: 15px; fill: var(--muted); text-anchor: middle; }
+    .net-graph .elabel.lost { fill: var(--open); }
+    .net-graph .terminal-node { fill: #fff; stroke: #728899; stroke-width: 2.5; }
+    .net-graph .relay-node { fill: var(--accent); stroke: var(--accent); stroke-width: 2.5; }
+    .net-graph .relay-node.lost { fill: #fff; stroke: var(--open); stroke-dasharray: 4 4; }
+    .net-graph .nlabel { font-family: "Segoe UI", Arial, sans-serif; font-size: 16px; font-weight: 650; text-anchor: middle; dominant-baseline: central; fill: var(--ink); }
+    .net-graph .nlabel.relay { fill: #fff; }
+    .net-graph .cross { stroke: var(--open); stroke-width: 3; stroke-linecap: round; }
+    .net-metric { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 4px 0 0; border-top: 1px solid var(--line); padding-top: 10px; }
+    .net-metric strong { font-size: 26px; font-weight: 650; color: var(--accent); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .net-metric strong[data-kind="open"] { color: var(--open); }
+    .net-note { margin: 6px 0 0; color: #42596c; font-size: 14px; }
+    .verdict h3 { margin: 0 0 5px; font-size: 19px; line-height: 1.3; font-weight: 650; }
+    @media (max-width: 730px) { .net-cards { grid-template-columns: 1fr; } .net-card { padding: 14px 14px; } }
+    @media print { #net-scenarios, .net-placements { display: none; } .net-cards { grid-template-columns: 1fr 1fr; } .net-card, .network .verdict { break-inside: avoid; } }
+    @media (min-width: 1001px) and (max-height: 1200px) {
+      main { padding-top: 16px; }
+      .topline { margin-bottom: 10px; }
+      h1 { font-size: 34px; margin-bottom: 8px; }
+      .hero { margin-bottom: 12px; }
+      .intro { font-size: 14px; max-width: 800px; }
+      .target strong { font-size: 32px; }
+      .method { margin-bottom: 14px; font-size: 13px; }
+      .controls { padding: 14px 18px; margin-bottom: 16px; }
+      .controls-head { margin-bottom: 10px; }
+      .hint { font-size: 13px; }
+      .legend { padding-top: 10px; font-size: 12px; }
+      .circuit { padding: 16px 18px; }
+      .circuit-main { display: grid; grid-template-columns: minmax(0, 1fr) 140px; align-items: center; gap: 12px; margin: 12px 0; }
+      .circuit-diagram { margin: 0; }
+      .circuit-diagram .ohms { font-size: 22px; }
+      .metrics { grid-template-columns: 1fr; border-top: 0; padding-top: 0; gap: 8px; }
+      .resistance { font-size: 30px; }
+      .deviation { margin-top: 3px; font-size: 20px; }
+      .percent { font-size: 12px; }
+      .calculation { margin-top: 8px; padding: 8px 11px; }
+      .verdict { margin-top: 16px; padding: 14px 18px; }
+      .analysis { margin-top: 16px; gap: 16px; }
+      .panel { padding: 14px 18px; }
+      .dist-rows { margin: 10px 0 8px; }
+      .dist-table th, .dist-table td { padding: 4px 8px; }
+      .dist-verdict { margin-top: 8px; font-size: 14px; }
+      .dual-states { margin: 10px 0 8px; }
+      .dual-actions { margin-top: 10px; }
+      .dual-note { margin-top: 8px; }
+      .principle { margin-top: 12px; }
+      details { margin-top: 14px; }
+    }
+    @media (min-width: 1001px) and (max-height: 800px) {
+      main { padding-top: 12px; }
+      .topline { margin-bottom: 8px; }
+      .quiet-button { padding: 6px 12px; }
+      h1 { font-size: 30px; margin-bottom: 4px; }
+      .hero { margin-bottom: 10px; }
+      .method { margin-bottom: 10px; }
+      .step { width: 21px; height: 21px; }
+      .controls { padding: 12px 18px; margin-bottom: 12px; }
+      .controls-head { margin-bottom: 8px; }
+      .controls h2 { font-size: 17px; }
+      .hint { font-size: 12px; margin-top: 4px; }
+      .resistor-name { font-size: 16px; }
+      legend { margin-bottom: 6px; }
+      .state-button { min-height: 36px; padding-top: 7px; padding-bottom: 7px; }
+      .legend { padding-top: 8px; }
+      .circuit { padding: 14px 18px; }
+      .circuit h2 { margin-top: 6px; }
+      .formula { font-size: 16px; margin-top: 4px; }
+      .circuit-main { margin: 8px 0; }
+      .metrics { gap: 6px; }
+      .metric-label { font-size: 12px; }
+      .resistance { margin: 1px 0; }
+      .calculation { padding: 7px 11px; }
+      .calculation small { font-size: 11.5px; margin-bottom: 2px; }
+      .calculation p { font-size: 14px; line-height: 1.5; }
+      .verdict { margin-top: 12px; padding: 12px 18px; }
+      .verdict h2 { font-size: 18px; }
+      .verdict p { font-size: 14px; }
+      .analysis { margin-top: 12px; }
+      .panel { padding: 12px 18px; }
+      .panel h2 { font-size: 17px; }
+      .dist-bar { height: 26px; }
+      .identity { font-size: 15px; }
+    }
+    @media (max-width: 1000px) {
+      main { padding: 24px; }
+      .resistor-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .circuit { padding: 18px; }
+      .metrics { gap: 8px; }
+      .metric-label { font-size: 12px; }
+      .deviation { font-size: 20px; }
+    }
+    @media (max-width: 730px) {
+      main { padding: 20px 16px; }
+      .hero { align-items: flex-start; }
+      .target { flex-basis: 95px; padding-left: 12px; }
+      .target strong { font-size: 30px; }
+      .target span { font-size: 12px; }
+      .circuits { grid-template-columns: 1fr; gap: 16px; }
+      .circuit { padding: 18px 20px; }
+      .circuit-diagram { max-width: 560px; margin: 6px auto 3px; }
+      .resistance { font-size: 38px; }
+      .method { font-size: 12px; gap: 8px; }
+      .step { width: 21px; height: 21px; }
+      .controls { padding: 16px; }
+      .verdict { padding: 16px; }
+      .eyebrow { font-size: 10px; letter-spacing: .08em; }
+      .analysis { grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+      .panel { padding: 16px; }
+    }
+    @media (max-width: 430px) {
+      .hero { display: block; }
+      .target { margin-top: 14px; display: flex; align-items: baseline; gap: 14px; }
+      .target strong { font-size: 28px; }
+      .resistor-controls { grid-template-columns: 1fr; gap: 12px; }
+      .topline { align-items: flex-start; }
+      .quiet-button { padding: 6px 9px; font-size: 12px; white-space: nowrap; }
+      .arrow { display: none; }
+      .method span { flex-basis: 100%; }
+      .circuit { padding: 16px 12px; }
+      .circuit-diagram text { font-size: 26px; }
+      .circuit-diagram .ohms { font-size: 25px; }
+      .circuit-diagram .terminal-label { font-size: 25px; }
+      .circuit h2, .controls h2 { font-size: 18px; }
+      .formula { font-size: 16px; }
+      .resistance { font-size: 32px; }
+      .deviation { font-size: 20px; }
+      .verdict { gap: 10px; padding: 14px; }
+      .verdict h2 { font-size: 18px; }
+      .verdict-symbol { flex-basis: 28px; width: 28px; height: 28px; font-size: 18px; }
+      .panel { padding: 14px 12px; }
+      .dist-table { font-size: 13px; }
+      .dist-table th, .dist-table td { padding: 5px 4px; }
+      .identity { font-size: 15px; }
+    }
+    @media (pointer: coarse) { .state-button, .preset, .quiet-button, .action-button { min-height: 44px; } }
+    @media (prefers-reduced-motion: no-preference) { button { transition: background-color .15s ease, border-color .15s ease; } }
+    @media print {
+      body { background: #fff; font-size: 12px; }
+      main { max-width: none; padding: 0; }
+      .topline, .presets, .segmented { display: none; }
+      h1 { font-size: 30px; }
+      .circuits { grid-template-columns: 1fr 1fr; gap: 12px; }
+      .circuit { padding: 12px; break-inside: avoid; }
+      .controls { padding: 12px; }
+      .resistor-controls { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .verdict, details { break-inside: avoid; }
+      .analysis { grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+      .panel { padding: 12px; break-inside: avoid; }
+      .dual-actions { display: none; }
+      .seg, .swatch { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="topline">
+      <p class="eyebrow">Електрична аналогія синтезу структури багатоагентних мереж · інтерактивна модель</p>
+      <button type="button" class="quiet-button" id="fullscreen">На весь екран</button>
+    </div>
+    <header class="hero">
+      <div>
+        <h1>Одна функція. Дві структури.</h1>
+        <p class="intro">Чотири резистори по 4 Ом. Дві схеми з тим самим опором — різна реакція на відмови.</p>
+      </div>
+      <div class="target"><span>Цільовий опір</span><strong>4 Ом</strong></div>
+    </header>
+    <div class="method" aria-label="Ідея оберненого структурного синтезу">
+      <span><i class="step">1</i> Задаємо потрібний опір</span><b class="arrow" aria-hidden="true">→</b>
+      <span><i class="step">2</i> Знаходимо допустимі структури</span><b class="arrow" aria-hidden="true">→</b>
+      <span><i class="step">3</i> Порівнюємо за відмов</span>
+    </div>
+    <noscript><p>Для перемикання станів і перерахунку опору увімкніть JavaScript у браузері. Модель працює без інтернету.</p></noscript>
+    <section class="controls" aria-labelledby="controls-title">
+      <div class="controls-head">
+        <div>
+          <h2 id="controls-title">Задайте стан резисторів</h2>
+          <p class="hint">Ті самі стани R₁–R₄ застосовуються до обох схем. Для кількох відмов дивіться також розподіл за всіма розміщеннями.</p>
+        </div>
+        <div class="presets" role="group" aria-label="Приклади для демонстрації">
+          <button type="button" class="preset" data-preset="NNNN" aria-pressed="true">Усе справне</button>
+          <button type="button" class="preset" data-preset="ONNN" aria-pressed="false">Обрив R₁</button>
+          <button type="button" class="preset" data-preset="SNNN" aria-pressed="false">КЗ R₁</button>
+          <button type="button" class="preset" data-preset="OONN" aria-pressed="false">Обрив R₁ і R₂</button>
+        </div>
+      </div>
+      <div class="resistor-controls" id="resistor-controls"></div>
+      <div class="legend" aria-label="Позначення станів">
+        <span><i class="legend-mark normal" aria-hidden="true"></i> Норма · 4 Ом</span>
+        <span><i class="legend-mark open" aria-hidden="true"></i> Обрив · ∞</span>
+        <span><i class="legend-mark short" aria-hidden="true"></i> КЗ — коротке замикання · 0 Ом</span>
+      </div>
+    </section>
+    <section class="circuits" aria-label="Порівняння двох топологій">
+      <article class="circuit a" aria-labelledby="title-a">
+        <div class="circuit-head"><span class="structure-id">Структура A</span><span class="result-tag" id="tag-a" data-kind="target">Ціль досягнуто</span></div>
+        <h2 id="title-a">Дві послідовні гілки</h2>
+        <p class="formula">(R₁ + R₂) ∥ (R₃ + R₄)</p>
+        <div class="circuit-main">
+        <svg id="diagram-a" class="circuit-diagram" viewBox="0 20 520 198" role="img" aria-labelledby="svg-title-a svg-desc-a"></svg>
+        <div class="metrics">
+          <div><div class="metric-label">Еквівалентний опір</div><p class="resistance"><span id="resistance-a">4</span> <span class="unit">Ом</span></p></div>
+          <div><div class="metric-label">Відхилення від цілі</div><p class="deviation" id="deviation-a" data-kind="target">×1</p><p class="percent" id="deviation-note-a">збігається з ціллю · λ = 0</p></div>
+        </div>
+        </div>
+        <div class="calculation"><small>Розрахунок · усі значення в Ом</small><p id="calculation-a"></p></div>
+        <p class="card-note" id="note-a" hidden></p>
+      </article>
+      <article class="circuit b" aria-labelledby="title-b">
+        <div class="circuit-head"><span class="structure-id">Структура B</span><span class="result-tag" id="tag-b" data-kind="target">Ціль досягнуто</span></div>
+        <h2 id="title-b">Дві паралельні пари</h2>
+        <p class="formula">(R₁ ∥ R₂) + (R₃ ∥ R₄)</p>
+        <div class="circuit-main">
+        <svg id="diagram-b" class="circuit-diagram" viewBox="0 20 520 198" role="img" aria-labelledby="svg-title-b svg-desc-b"></svg>
+        <div class="metrics">
+          <div><div class="metric-label">Еквівалентний опір</div><p class="resistance"><span id="resistance-b">4</span> <span class="unit">Ом</span></p></div>
+          <div><div class="metric-label">Відхилення від цілі</div><p class="deviation" id="deviation-b" data-kind="target">×1</p><p class="percent" id="deviation-note-b">збігається з ціллю · λ = 0</p></div>
+        </div>
+        </div>
+        <div class="calculation"><small>Розрахунок · усі значення в Ом</small><p id="calculation-b"></p></div>
+        <p class="card-note" id="note-b" hidden></p>
+      </article>
+    </section>
+    <section class="verdict" id="verdict" data-winner="tie" aria-live="polite" aria-atomic="true">
+      <div class="verdict-symbol" id="verdict-symbol" aria-hidden="true">=</div>
+      <div><h2 id="verdict-title">Обидві структури виконують вимогу</h2><p id="verdict-text"></p><p class="verdict-note" id="verdict-note" hidden></p></div>
+    </section>
+    <div class="analysis">
+      <section class="panel" aria-labelledby="dist-title">
+        <h2 id="dist-title">Усі розміщення цього складу відмов</h2>
+        <p class="hint" id="dist-caption"></p>
+        <div class="dist-rows">
+          <div class="dist-row"><span class="dist-key" aria-hidden="true">A</span><div class="dist-bar" id="dist-bar-a" role="img"></div></div>
+          <div class="dist-row"><span class="dist-key b" aria-hidden="true">B</span><div class="dist-bar" id="dist-bar-b" role="img"></div></div>
+        </div>
+        <div class="dist-legend" id="dist-legend"></div>
+        <table class="dist-table">
+          <caption class="sr-only">Скільки розміщень відмов зберігає функцію за різних допусків</caption>
+          <thead><tr><th scope="col"><span class="sr-only">Критерій</span></th><th scope="col">A</th><th scope="col">B</th></tr></thead>
+          <tbody id="dist-body"></tbody>
+        </table>
+        <p class="dist-verdict" id="dist-verdict"></p>
+      </section>
+      <section class="panel" aria-labelledby="dual-title">
+        <h2 id="dual-title">Дуальність A ↔ B</h2>
+        <p class="hint">Заміна послідовного з’єднання паралельним (і навпаки) разом із R&nbsp;↦&nbsp;16/R переводить A в B. Опір 4&nbsp;Ом лишається 4&nbsp;Ом, а ∞&nbsp;↔&nbsp;0, тобто обрив&nbsp;↔&nbsp;КЗ.</p>
+        <div class="dual-states">
+          <div class="dual-line" id="dual-s"></div>
+          <div class="dual-line" id="dual-s-star"></div>
+        </div>
+        <p class="identity" id="identity-ab"></p>
+        <p class="identity" id="identity-ba"></p>
+        <div class="dual-actions">
+          <button type="button" class="action-button" id="apply-dual">Перейти до s∗</button>
+          <p class="hint" id="dual-status"></p>
+        </div>
+        <p class="dual-note">Тому B реагує на обриви так само, як A — на КЗ, і навпаки. А 4&nbsp;Ом — нерухома точка R&nbsp;↦&nbsp;16/R: якщо одна схема дає ціль, дуальна теж її дає. Звідси й «одна функція — дві структури».</p>
+      </section>
+    </div>
+    <section class="panel network" aria-labelledby="net-title">
+      <div class="net-head">
+        <div>
+          <h2 id="net-title">Мережеве тлумачення: канали й агенти</h2>
+          <p class="hint">Резистор — канал зв’язку, внутрішній вузол схеми — агент-ретранслятор, клеми a та b — кінцеві агенти. Еквівалентний опір між a та b стає мірою резервування маршрутів: що більше незалежних маршрутів і що вони коротші, то він менший.</p>
+        </div>
+        <div class="presets" role="group" aria-label="Сценарій відмови в мережі" id="net-scenarios">
+          <button type="button" class="preset" data-net="none" aria-pressed="true">Усе справне</button>
+          <button type="button" class="preset" data-net="channel" aria-pressed="false">Втрата каналу</button>
+          <button type="button" class="preset" data-net="two" aria-pressed="false">Втрата двох каналів</button>
+          <button type="button" class="preset" data-net="relay" aria-pressed="false">Втрата ретранслятора</button>
+        </div>
+      </div>
+      <div class="net-placements" id="net-placements" role="group" aria-label="Які два канали втрачено" hidden></div>
+      <div class="net-cards">
+        <article class="net-card a" aria-labelledby="net-a-title">
+          <div class="circuit-head"><span class="structure-id">Структура A</span><span class="result-tag" id="net-tag-a" data-kind="target">Зв’язок є</span></div>
+          <h3 id="net-a-title">Два незалежні ретранслятори</h3>
+          <svg id="net-svg-a" class="net-graph" viewBox="0 0 360 170" role="img" aria-labelledby="net-svg-a-title net-svg-a-desc"></svg>
+          <p class="net-metric"><span class="metric-label">Опір між a та b</span><strong id="net-r-a">4 Ом</strong></p>
+          <p class="net-note" id="net-note-a"></p>
+        </article>
+        <article class="net-card b" aria-labelledby="net-b-title">
+          <div class="circuit-head"><span class="structure-id">Структура B</span><span class="result-tag" id="net-tag-b" data-kind="target">Зв’язок є</span></div>
+          <h3 id="net-b-title">Один ретранслятор, подвоєні канали</h3>
+          <svg id="net-svg-b" class="net-graph" viewBox="0 0 360 170" role="img" aria-labelledby="net-svg-b-title net-svg-b-desc"></svg>
+          <p class="net-metric"><span class="metric-label">Опір між a та b</span><strong id="net-r-b">4 Ом</strong></p>
+          <p class="net-note" id="net-note-b"></p>
+        </article>
+      </div>
+      <div class="verdict" id="net-verdict" data-winner="tie" aria-live="polite" aria-atomic="true">
+        <div class="verdict-symbol" id="net-verdict-symbol" aria-hidden="true">=</div>
+        <div><h3 id="net-verdict-title">Функціонально A і B рівноцінні</h3><p id="net-verdict-text"></p></div>
+      </div>
+    </section>
+    <p class="principle"><strong>Ідея синтезу:</strong> спочатку задаємо функцію, потім шукаємо структури, які її забезпечують. Серед них обираємо ту, що краще зберігає функцію за обраного сценарію відмови. Для дуальної пари A і B вибір зводиться до питання, що ймовірніше або небезпечніше: обрив чи КЗ. У мережевому тлумаченні — чого очікувати: втрати каналів (тоді краща B) чи втрати агентів (тоді краща A). Тому модель відмов має бути частиною постановки задачі.</p>
+    <details>
+      <summary>Як працює модель</summary>
+      <div class="model-notes">
+        <p><strong>Послідовне з’єднання (+):</strong> опори додаються. Обрив будь-якого елемента розмикає всю гілку; коротке замикання замінює цей елемент провідником з опором 0 Ом.</p>
+        <p><strong>Паралельне з’єднання (∥):</strong> для скінченних ненульових опорів R ∥ S = RS / (R + S). Розімкнена гілка не проводить струм: R ∥ ∞ = R. Короткозамкнена гілка дає 0 Ом: R ∥ 0 = 0. Дві розімкнені гілки дають ∞.</p>
+        <p><strong>Міра відхилення:</strong> λ = |ln(R<sub>екв</sub> / 4)|. Опір, удвічі більший за ціль, і опір, удвічі менший, однаково далекі від неї: λ = ln 2 ≈ 0,693, на картці — ×2 і ÷2. Обрив і КЗ між клемами мають λ = ∞. Це різні типи відмови, а не різні ступені однієї, тому, коли обидві схеми їх зазнали, переможця немає.</p>
+        <p><strong>Чому не ΔR = |R<sub>екв</sub> − 4|:</strong> така міра обмежує КЗ ста відсотками відхилення, а обрив — нескінченністю, і цим вносить власну асиметрію. <span id="metric-tallies"></span></p>
+        <p><strong>Дуальність:</strong> R<sub>A</sub>(s) · R<sub>B</sub>(s∗) = 16 Ом² для кожного з 81 стану, де s∗ — стан s із заміною обрив ↔ КЗ (0 і ∞ переходять одне в одне). Тому за незалежних відмов з однаковими ймовірностями обриву й КЗ і за допуску, симетричного в логарифмічній шкалі, A і B точно рівноцінні; перевага з’являється лише з асиметрії моделі відмов.</p>
+        <p><strong>Розміщення відмов:</strong> для однієї відмови всі позиції всередині кожної схеми рівноправні, тож порівняння «той самий стан в обох схемах» коректне. Для кількох відмов результат залежить від того, які резистори B вважати «тими самими»: наприклад, (R₁ ∥ R₃) + (R₂ ∥ R₄) — це A з перемичкою між серединами гілок. Тому розподіл рахується за всіма розміщеннями того самого складу відмов.</p>
+        <p><strong>Межі прикладу:</strong> це ідеальна резистивна модель між клемами a та b. Обрив означає ∞, коротке замикання — 0 Ом; опір проводів не враховується. Потужність оцінено лише там, де опір між клемами дорівнює 4 Ом: тоді струм не залежить від типу джерела. Нагрівання та ймовірності відмов тут не оцінюються. Дробові значення округлено до трьох знаків після коми й позначено ≈.</p>
+        <p><strong>Повнота переліку:</strong> двополюсник із чотирьох резисторів, у якому працюють усі чотири, завжди послідовно-паралельний (мостовій схемі потрібно п’ять). Таких двополюсників 10, і ціль 4 Ом дають лише A і B. Опори решти восьми — 1; 1,6; 2,4; 3; ≈ 5,333; ≈ 6,667; 10 і 16 Ом — теж утворюють дуальні пари R ↔ 16/R.</p>
+        <p><strong>Мережеве тлумачення:</strong> резистор відповідає каналу зв’язку, внутрішній вузол схеми — агенту-ретранслятору. Втрата каналу — це обрив резистора, втрата агента — видалення вузла разом з усіма його каналами. Короткому замиканню природного мережевого аналога немає: воно означало б злиття двох агентів в один. Еквівалентний опір між кінцевими агентами (resistance distance) враховує і кількість, і довжину маршрутів, а втрата каналу ніколи його не зменшує. Це не єдина можлива міра: кількість незалежних маршрутів чи довжина найкоротшого з них враховують лише частину цієї інформації. Значення на панелі рахуються тими самими формулами, що й для схем вище.</p>
+      </div>
+    </details>
+    <p class="sr-only" id="fullscreen-status" role="status"></p>
+  </main>
+  <script>
+  (() => {
+    'use strict';
+    const TARGET = 4;
+    const NOMINAL = 4;
+    const EPS = 1e-9;
+    const KEYS = ['A', 'B'];
+    const STATE_KEYS = ['normal', 'open', 'short'];
+    const states = ['normal', 'normal', 'normal', 'normal'];
+    const stateNames = { normal: 'норма', open: 'обрив', short: 'коротке замикання' };
+    const stateValues = { normal: NOMINAL, open: Infinity, short: 0 };
+    const stateLabels = { normal: 'Норма', open: 'Обрив', short: 'КЗ' };
+    const chipLabels = { normal: 'норма', open: 'обрив', short: 'КЗ' };
+    const dualOf = { normal: 'normal', open: 'short', short: 'open' };
+    const codeOf = { normal: 'N', open: 'O', short: 'S' };
+    const stateOfCode = { N: 'normal', O: 'open', S: 'short' };
+    const subs = ['₁', '₂', '₃', '₄'];
+    const numberFormat = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 3 });
+    const byId = id => document.getElementById(id);
+    const format = value => Number.isFinite(value) ? numberFormat.format(value) : '∞';
+    const rounded = value => Number.isFinite(value) && Math.abs(value * 1000 - Math.round(value * 1000)) > 1e-8;
+    const display = value => (rounded(value) ? '≈ ' : '') + format(value);
+    const near = (x, y) => Math.abs(x - y) < EPS;
+    const other = key => (key === 'A' ? 'B' : 'A');
+    const rName = i => `R${subs[i]}`;
+    const capitalize = text => text.charAt(0).toUpperCase() + text.slice(1);
+    const listJoin = items => (items.length < 2 ? items.join('') : `${items.slice(0, -1).join(', ')} і ${items[items.length - 1]}`);
+    const plural = (n, one, few, many) => {
+      const n10 = n % 10, n100 = n % 100;
+      if (n10 === 1 && n100 !== 11) return one;
+      if (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) return few;
+      return many;
+    };
+
+    // Ideal series and parallel rules avoid NaN for 0 and Infinity.
+    const series = (a, b) => (!Number.isFinite(a) || !Number.isFinite(b)) ? Infinity : a + b;
+    const parallel = (a, b) => {
+      if (a === 0 || b === 0) return 0;
+      if (!Number.isFinite(a)) return b;
+      if (!Number.isFinite(b)) return a;
+      return (a * b) / (a + b);
+    };
+    // How a common current divides between two parallel paths.
+    const split = (x, y) => {
+      if (x === 0 && y === 0) return [0.5, 0.5];
+      if (x === 0) return [1, 0];
+      if (y === 0) return [0, 1];
+      if (!Number.isFinite(x) && !Number.isFinite(y)) return [0, 0];
+      if (!Number.isFinite(x)) return [0, 1];
+      if (!Number.isFinite(y)) return [1, 0];
+      return [y / (x + y), x / (x + y)];
+    };
+    const structures = {
+      A: {
+        resistance: r => parallel(series(r[0], r[1]), series(r[2], r[3])),
+        // Share of the terminal current through each resistor.
+        shares: r => { const [i1, i2] = split(series(r[0], r[1]), series(r[2], r[3])); return [i1, i1, i2, i2]; },
+      },
+      B: {
+        resistance: r => series(parallel(r[0], r[1]), parallel(r[2], r[3])),
+        shares: r => [...split(r[0], r[1]), ...split(r[2], r[3])],
+      },
+    };
+    const valuesOf = list => list.map(state => stateValues[state]);
+    const nominalValues = [NOMINAL, NOMINAL, NOMINAL, NOMINAL];
+    const nominalShares = { A: structures.A.shares(nominalValues), B: structures.B.shares(nominalValues) };
+
+    // λ = |ln(R / R₀)|: doubling and halving are equally far from the target.
+    function classify(R) {
+      if (R === 0) return { kind: 'short', lambda: Infinity };
+      if (!Number.isFinite(R)) return { kind: 'open', lambda: Infinity };
+      const ratio = R / TARGET;
+      const lambda = Math.abs(Math.log(ratio));
+      if (lambda < EPS) return { kind: 'target', lambda: 0, factor: 1 };
+      return { kind: ratio > 1 ? 'up' : 'down', lambda, factor: ratio > 1 ? ratio : 1 / ratio };
+    }
+    const isFailure = c => c.kind === 'open' || c.kind === 'short';
+    const razy = f => { const n = Math.round(f); return near(f, n) ? plural(n, 'раз', 'рази', 'разів') : 'раза'; };
+    const times = f => `${display(f)} ${razy(f)}`;
+    const factorText = f => (rounded(f) ? '≈' : '') + format(f);
+    function phrase(c) {
+      if (c.kind === 'target') return 'збігається з ціллю';
+      if (c.kind === 'up') return `у ${times(c.factor)} більший за ціль`;
+      if (c.kind === 'down') return `у ${times(c.factor)} менший за ціль`;
+      return c.kind === 'open' ? 'провідного шляху немає' : 'клеми закорочено';
+    }
+    function badge(c) {
+      if (c.kind === 'target') return '×1';
+      if (c.kind === 'up') return `×${factorText(c.factor)}`;
+      if (c.kind === 'down') return `÷${factorText(c.factor)}`;
+      return c.kind === 'open' ? 'обрив' : 'КЗ';
+    }
+    const NBSP = ' ';
+    const lambdaText = l => `λ${NBSP}${Number.isFinite(l) && rounded(l) ? '≈' : '='}${NBSP}${format(l)}`;
+
+    // With 4 Ω at the terminals the current equals the nominal one for any source,
+    // so the power of each resistor can be compared with its nominal power.
+    function overload(key, r, R) {
+      if (!Number.isFinite(R) || !near(R, TARGET) || r.every(v => v === NOMINAL)) return null;
+      const shares = structures[key].shares(r);
+      const ratios = r.map((v, k) => (v === NOMINAL ? (shares[k] / nominalShares[key][k]) ** 2 : 0));
+      const max = Math.max(...ratios);
+      if (max <= 1 + EPS) return null;
+      const idx = ratios.flatMap((q, k) => (near(q, max) ? [k] : []));
+      return { idx, ratio: max, whole: idx.length === 1 && near(shares[idx[0]], 1) };
+    }
+    function overloadSentence(o, where) {
+      const who = listJoin(o.idx.map(rName));
+      const head = where ? `${where} ` : '';
+      const power = `потужність, у ${times(o.ratio)} більшу за номінальну`;
+      if (o.whole) return `${head}весь струм іде через ${who}, і він розсіює ${power}`;
+      return `${head}найбільше навантажено ${who}: ${o.idx.length > 1 ? 'вони розсіюють' : 'він розсіює'} ${power}`;
+    }
+    function evaluate(list) {
+      const r = valuesOf(list);
+      const result = { r };
+      for (const key of KEYS) {
+        const R = structures[key].resistance(r);
+        result[key] = { R, c: classify(R), load: overload(key, r, R) };
+      }
+      return result;
+    }
+
+    const controls = byId('resistor-controls');
+    for (let i = 0; i < 4; i++) {
+      const field = document.createElement('fieldset');
+      field.innerHTML = `<legend><span class="resistor-name">R${subs[i]}</span><span id="state-value-${i}" class="state-value">4 Ом</span></legend>
+        <div class="segmented" role="group" aria-label="Стан резистора R${i + 1}">
+          ${STATE_KEYS.map(state => `<button type="button" class="state-button" data-resistor="${i}" data-state="${state}" aria-label="R${i + 1}: ${stateNames[state]}" aria-pressed="${state === 'normal'}">${stateLabels[state]}</button>`).join('')}
+        </div>`;
+      controls.append(field);
+    }
+    controls.addEventListener('click', event => {
+      const button = event.target.closest('button[data-resistor]');
+      if (!button) return;
+      states[Number(button.dataset.resistor)] = button.dataset.state;
+      update();
+    });
+    document.querySelectorAll('[data-preset]').forEach(button => button.addEventListener('click', () => {
+      [...button.dataset.preset].forEach((code, i) => { states[i] = stateOfCode[code]; });
+      update();
+    }));
+    byId('apply-dual').addEventListener('click', () => {
+      states.forEach((state, i) => { states[i] = dualOf[state]; });
+      update();
+    });
+
+    const wire = path => `<path class="wire" d="${path}"/>`;
+    const node = (x, y) => `<circle class="node" cx="${x}" cy="${y}" r="3.7"/>`;
+    const component = (index, x, y, over) => {
+      const state = states[index];
+      let symbol;
+      if (state === 'open') {
+        symbol = `<path class="symbol open" d="M${x - 31} ${y}H${x - 10} M${x + 10} ${y}H${x + 31}"/>
+          <circle class="symbol open" cx="${x - 10}" cy="${y}" r="3.5"/><circle class="symbol open" cx="${x + 10}" cy="${y}" r="3.5"/>`;
+      } else if (state === 'short') {
+        symbol = `<path class="symbol short" d="M${x - 31} ${y}H${x + 31}"/>`;
+      } else {
+        symbol = `<rect class="symbol${over ? ' overload' : ''}" x="${x - 31}" y="${y - 12}" width="62" height="24" rx="1"/>`;
+      }
+      const label = state === 'normal' ? (over ? `4 Ом · P×${format(over)}` : '4 Ом') : state === 'open' ? '∞ · обрив' : '0 Ом · КЗ';
+      return `<g data-component="${index}" data-state="${state}"><text x="${x}" y="${y - 28}" font-weight="600">R${subs[index]}</text>${symbol}<text class="ohms ${over ? 'overload' : state}" x="${x}" y="${y + 34}">${label}</text></g>`;
+    };
+
+    function renderCircuit(key, res) {
+      const id = key.toLowerCase();
+      const svg = byId(`diagram-${id}`);
+      const parts = key === 'A' ? [[0,166,76],[1,354,76],[2,166,172],[3,354,172]] : [[0,166,76],[1,166,172],[2,354,76],[3,354,172]];
+      const overloaded = res.load ? res.load.idx : [];
+      const description = states.map((state, i) => `R${i + 1}: ${stateNames[state]}, ${format(stateValues[state])} Ом`).join('; ');
+      const loadText = res.load ? ` Перевантажено: ${res.load.idx.map(i => `R${i + 1}`).join(', ')}, потужність ×${format(res.load.ratio)}.` : '';
+      let markup = `<title id="svg-title-${id}">Електрична схема структури ${key}</title><desc id="svg-desc-${id}">${description}. Еквівалентний опір між клемами a та b: ${display(res.R)} Ом.${loadText}</desc>`;
+      markup += wire('M24 124H68 M68 76V172 M452 76V172 M452 124H496');
+      if (key === 'A') {
+        markup += wire('M68 76H135 M197 76H323 M385 76H452 M68 172H135 M197 172H323 M385 172H452');
+      } else {
+        markup += wire('M68 76H135 M197 76H244 M68 172H135 M197 172H244 M244 76V172 M244 124H276 M276 76V172 M276 76H323 M385 76H452 M276 172H323 M385 172H452');
+        markup += node(244,124) + node(276,124);
+      }
+      markup += node(68,124) + node(452,124);
+      markup += `<circle class="terminal" cx="24" cy="124" r="5"/><circle class="terminal" cx="496" cy="124" r="5"/><text class="terminal-label" x="24" y="153">a</text><text class="terminal-label" x="496" y="153">b</text>`;
+      markup += parts.map(([index, x, y]) => component(index, x, y, overloaded.includes(index) ? res.load.ratio : 0)).join('');
+      svg.innerHTML = markup;
+    }
+
+    function tagFor(res) {
+      if (res.c.kind === 'target') return res.load ? ['caution', '4 Ом на клемах'] : ['target', 'Ціль досягнуто'];
+      if (res.c.kind === 'open') return ['open', 'Схему розімкнено'];
+      if (res.c.kind === 'short') return ['short', 'КЗ між клемами'];
+      return ['deviation', 'Опір змінився'];
+    }
+    function renderCard(key, res) {
+      const id = key.toLowerCase();
+      const resistance = byId(`resistance-${id}`);
+      resistance.textContent = display(res.R);
+      resistance.dataset.value = String(res.R);
+      const deviation = byId(`deviation-${id}`);
+      deviation.textContent = badge(res.c);
+      deviation.dataset.kind = res.c.kind;
+      deviation.dataset.lambda = String(res.c.lambda);
+      byId(`deviation-note-${id}`).textContent = `${phrase(res.c)} · ${lambdaText(res.c.lambda)}`;
+      const [kind, text] = tagFor(res);
+      const tag = byId(`tag-${id}`);
+      tag.dataset.kind = kind;
+      tag.textContent = text;
+      const note = byId(`note-${id}`);
+      note.hidden = !res.load;
+      note.textContent = res.load ? `4 Ом лише на клемах: ${overloadSentence(res.load, '')}.` : '';
+      renderCircuit(key, res);
+    }
+
+    function stateVerdict(e, faults) {
+      const a = e.A, b = e.B;
+      const failA = isFailure(a.c), failB = isFailure(b.c);
+      if (failA && failB) {
+        if (a.c.kind === b.c.kind) {
+          return a.c.kind === 'open'
+            ? { winner: 'none', symbol: '∞', title: 'Обидві схеми розімкнені', text: 'Між клемами a та b немає провідного шляху в жодній структурі. Обидві втратили задану функцію; переваги немає.' }
+            : { winner: 'none', symbol: '0', title: 'В обох схемах — КЗ між клемами', text: 'Клеми закорочено в обох структурах. Задану функцію втрачено; переваги немає.' };
+        }
+        const openKey = a.c.kind === 'open' ? 'A' : 'B';
+        return {
+          winner: 'none', symbol: '≠', title: 'Обидві втратили функцію — по-різному',
+          text: `Структуру ${openKey} розімкнено, у ${other(openKey)} — КЗ між клемами. Обрив і коротке замикання — різні типи відмови, а не різні ступені однієї: яка з них гірша, залежить від джерела живлення й застосування. Тому переможця тут немає.`,
+        };
+      }
+      if (failA || failB) {
+        const W = failA ? 'B' : 'A', L = other(W);
+        const w = e[W], l = e[L];
+        const lost = l.c.kind === 'open' ? `структуру ${L} розімкнено` : `у ${L} — КЗ між клемами`;
+        let text = `${capitalize(lost)}, а в ${W} опір ${phrase(w.c)} (${display(w.R)} Ом).`;
+        if (w.load) text += ` Але ${overloadSentence(w.load, `в структурі ${W}`)}.`;
+        return { winner: W, symbol: W, title: w.c.kind === 'target' ? `Структура ${W} зберегла 4 Ом на клемах` : `Структура ${W} зберегла провідність`, text };
+      }
+      if (a.c.kind === 'target' && b.c.kind === 'target') {
+        if (!faults) {
+          return { winner: 'tie', symbol: '=', title: 'Обидві структури виконують вимогу', text: 'У справному стані обидві дають рівно 4 Ом. Задайте обрив або коротке замикання й порівняйте, як зміниться опір.' };
+        }
+        const both = a.load && b.load && a.load.whole && b.load.whole && near(a.load.ratio, b.load.ratio);
+        const detail = both
+          ? `в A весь струм іде через ${rName(a.load.idx[0])}, у B — через ${rName(b.load.idx[0])}, і кожен із них розсіює потужність, у ${times(a.load.ratio)} більшу за номінальну`
+          : KEYS.filter(key => e[key].load).map(key => overloadSentence(e[key].load, `у структурі ${key}`)).join('; ');
+        return { winner: 'caution', symbol: '=', title: 'Обидві дають 4 Ом на клемах', text: `Відмови компенсувалися лише на клемах: ${detail}. Опір між клемами збережено, рівномірне навантаження — ні.` };
+      }
+      if (near(a.c.lambda, b.c.lambda)) {
+        const opposite = a.c.kind !== b.c.kind;
+        return {
+          winner: 'tie', symbol: '=', title: 'Однакове відхилення від цілі',
+          text: `Опір A ${phrase(a.c)} (${display(a.R)} Ом), опір B — ${phrase(b.c)} (${display(b.R)} Ом). ` + (opposite
+            ? 'У логарифмічній мірі це однакова відстань від 4 Ом; перевага залежала б лише від того, що для застосування гірше — завеликий чи замалий опір.'
+            : 'Переваги немає.'),
+        };
+      }
+      const W = a.c.lambda < b.c.lambda ? 'A' : 'B', L = other(W);
+      const w = e[W], l = e[L];
+      let text = `Опір ${W} ${phrase(w.c)} (${display(w.R)} Ом), опір ${L} — ${phrase(l.c)} (${display(l.R)} Ом).`;
+      if (w.load) text += ` Але ${overloadSentence(w.load, `в структурі ${W}`)}.`;
+      return { winner: W, symbol: W, title: w.c.kind === 'target' ? `Структура ${W} зберегла 4 Ом на клемах` : `Структура ${W} ближча до цілі`, text };
+    }
+
+    // Every way to place the same number of opens and shorts on R₁–R₄.
+    function arrangements(nOpen, nShort) {
+      const result = [];
+      const walk = (list, open, short) => {
+        if (list.length === 4) { if (open === nOpen && short === nShort) result.push(list); return; }
+        for (const state of STATE_KEYS) {
+          const o = open + (state === 'open' ? 1 : 0), s = short + (state === 'short' ? 1 : 0);
+          if (o <= nOpen && s <= nShort) walk([...list, state], o, s);
+        }
+      };
+      walk([], 0, 0);
+      return result;
+    }
+    const LEVEL_LABELS = ['Рівно 4 Ом на клемах', `У межах ×1,5 (${display(TARGET / 1.5)}–${format(TARGET * 1.5)} Ом)`, 'Без обриву й КЗ'];
+    const LEVEL_DOES = ['частіше дає рівно 4 Ом на клемах', 'частіше тримається в межах ×1,5', 'частіше уникає обриву та КЗ'];
+    function distribution(list) {
+      const nOpen = list.filter(state => state === 'open').length;
+      const nShort = list.filter(state => state === 'short').length;
+      const single = nOpen + nShort === 0;
+      const sets = single ? [...arrangements(1, 0), ...arrangements(0, 1)] : arrangements(nOpen, nShort);
+      const bins = new Map();
+      const levels = { A: [0, 0, 0], B: [0, 0, 0] };
+      for (const arrangement of sets) {
+        const r = valuesOf(arrangement);
+        for (const key of KEYS) {
+          const R = structures[key].resistance(r);
+          const c = classify(R);
+          const id = Number.isFinite(R) ? Math.round(R * 1e6) / 1e6 : Infinity;
+          if (!bins.has(id)) bins.set(id, { R: id, c, A: 0, B: 0 });
+          bins.get(id)[key] += 1;
+          if (c.kind === 'target') levels[key][0] += 1;
+          if (c.kind === 'target' || (!isFailure(c) && c.factor <= 1.5 + EPS)) levels[key][1] += 1;
+          if (!isFailure(c)) levels[key][2] += 1;
+        }
+      }
+      const A = levels.A, B = levels.B;
+      const aBetter = A.some((v, i) => v > B[i]), bBetter = B.some((v, i) => v > A[i]);
+      const winner = aBetter && bBetter ? 'mixed' : aBetter ? 'A' : bBetter ? 'B' : 'tie';
+      return { nOpen, nShort, single, n: sets.length, bins: [...bins.values()].sort((x, y) => x.R - y.R), levels, winner };
+    }
+    function compositionLabel(nOpen, nShort) {
+      const parts = [];
+      if (nOpen) parts.push(`${nOpen} ${plural(nOpen, 'обрив', 'обриви', 'обривів')}`);
+      if (nShort) parts.push(`${nShort} КЗ`);
+      if (parts.length < 2) return parts[0];
+      return parts[0] + (/[аеєиіїоуюя]$/i.test(parts[0]) ? ' й ' : ' і ') + parts[1];
+    }
+    function distCaption(d) {
+      if (d.single) return 'Відмов поки немає, тож показано всі 8 одиничних відмов: обрив або КЗ будь-якого з резисторів.';
+      const how = d.n === 1
+        ? 'Можливе лише одне розміщення на R₁–R₄.'
+        : `Перебрано всі ${d.n} ${plural(d.n, 'розміщення', 'розміщення', 'розміщень')} на R₁–R₄, тож нумерація резисторів тут не має значення.`;
+      return `Склад відмов: ${compositionLabel(d.nOpen, d.nShort)}. ${how}`;
+    }
+    function distText(d) {
+      const A = d.levels.A, B = d.levels.B;
+      if (d.winner === 'tie') {
+        if (A[2] === 0 && B[2] === 0) {
+          return d.n === 1 ? 'В єдиному можливому розміщенні обидві схеми втрачають функцію.' : `В усіх ${d.n} розміщеннях обидві схеми втрачають функцію (обрив або КЗ між клемами).`;
+        }
+        const mirror = d.single || d.nOpen === d.nShort;
+        return 'За жодного допуску переваги немає.' + (mirror ? ` Розподіли дзеркальні (R${NBSP}↦${NBSP}16/R), бо заміна обрив${NBSP}↔${NBSP}КЗ переводить цей набір відмов сам у себе.` : '');
+      }
+      if (d.winner === 'mixed') {
+        const iA = A.findIndex((v, k) => v > B[k]), iB = B.findIndex((v, k) => v > A[k]);
+        return `Перевага залежить від допуску: A ${LEVEL_DOES[iA]} (${A[iA]} з ${d.n} розміщень проти ${B[iA]}), а B ${LEVEL_DOES[iB]} (${B[iB]} з ${d.n} проти ${A[iB]}).`;
+      }
+      const W = d.winner, L = other(W), w = d.levels[W], l = d.levels[L];
+      const i = w.findIndex((v, k) => v > l[k]);
+      return `${W} не гірша за ${L} за будь-якого допуску й ${LEVEL_DOES[i]}: ${w[i]} з ${d.n} розміщень проти ${l[i]}.`;
+    }
+    function multiNote(stateWinner, d) {
+      const base = 'Для кількох відмов результат окремого стану залежить від того, як занумеровано резистори в B. ';
+      let tail;
+      if (d.winner === 'A' || d.winner === 'B') {
+        tail = stateWinner === d.winner
+          ? `За всіма розміщеннями цього складу відмов перевага теж у ${d.winner}.`
+          : `А за всіма розміщеннями цього складу відмов перевага в ${d.winner}.`;
+      } else {
+        tail = d.winner === 'tie' ? 'За всіма розміщеннями цього складу відмов переваги немає.' : 'За всіма розміщеннями цього складу відмов перевага залежить від допуску.';
+      }
+      return `${base}${tail} Розподіл — нижче.`;
+    }
+    function segClass(c) {
+      if (c.kind === 'target' || c.kind === 'open' || c.kind === 'short') return `seg-${c.kind}`;
+      return `seg-${c.kind}-${c.factor <= 1.5 + EPS ? 1 : 2}`;
+    }
+    function binLabel(bin) {
+      if (bin.c.kind === 'open') return '∞ · обрив';
+      if (bin.c.kind === 'short') return '0 · КЗ';
+      if (bin.c.kind === 'target') return '4 Ом · ціль';
+      return `${display(bin.R)} Ом · ${badge(bin.c)}`;
+    }
+    function renderDistribution(d) {
+      byId('dist-caption').textContent = distCaption(d);
+      for (const key of KEYS) {
+        const bar = byId(`dist-bar-${key.toLowerCase()}`);
+        const used = d.bins.filter(bin => bin[key] > 0);
+        bar.innerHTML = used.map(bin => `<span class="seg ${segClass(bin.c)}" style="flex-grow: ${bin[key]}" title="${binLabel(bin)}: ${bin[key]} з ${d.n}">${bin[key]}</span>`).join('');
+        bar.setAttribute('aria-label', `Структура ${key}: ${used.map(bin => `${binLabel(bin)} — ${bin[key]} з ${d.n}`).join('; ')}`);
+      }
+      byId('dist-legend').innerHTML = d.bins.map(bin => `<span><i class="swatch ${segClass(bin.c)}" aria-hidden="true"></i>${binLabel(bin)}</span>`).join('');
+      byId('dist-body').innerHTML = LEVEL_LABELS.map((label, i) => {
+        const a = d.levels.A[i], b = d.levels.B[i];
+        return `<tr><th scope="row">${label}</th><td${a > b ? ' class="better"' : ''}>${a} з ${d.n}</td><td${b > a ? ' class="better"' : ''}>${b} з ${d.n}</td></tr>`;
+      }).join('');
+      byId('dist-verdict').textContent = distText(d);
+    }
+
+    function frac(v) {
+      if (!Number.isFinite(v) || near(v, Math.round(v))) return format(v);
+      for (let d = 2; d <= 12; d++) {
+        const n = v * d;
+        if (near(n, Math.round(n))) return `${Math.round(n)}/${d}`;
+      }
+      return display(v);
+    }
+    function identity(X, Y, Rx, Ry) {
+      const left = `R<sub>${X}</sub>(s)`, right = `R<sub>${Y}</sub>(s∗)`;
+      if (!Number.isFinite(Rx) || Rx === 0) return `${left} = ${format(Rx)}, ${right} = ${format(Ry)}: ${Rx === 0 ? 'КЗ ↔ обрив' : 'обрив ↔ КЗ'}`;
+      return `${left} · ${right} = ${frac(Rx)} · ${frac(Ry)} = ${display(Rx * Ry)} Ом²`;
+    }
+    function renderDuality(e) {
+      const dual = states.map(state => dualOf[state]);
+      const eDual = evaluate(dual);
+      const chips = list => list.map((state, i) => `<span class="chip" data-state="${state}">${rName(i)} ${chipLabels[state]}</span>`).join('');
+      byId('dual-s').innerHTML = `<span class="dual-label">s</span><span class="chips">${chips(states)}</span>`;
+      byId('dual-s-star').innerHTML = `<span class="dual-label">s∗</span><span class="chips">${chips(dual)}</span>`;
+      byId('identity-ab').innerHTML = identity('A', 'B', e.A.R, eDual.B.R);
+      byId('identity-ba').innerHTML = identity('B', 'A', e.B.R, eDual.A.R);
+      const selfDual = states.every(state => state === 'normal');
+      byId('apply-dual').disabled = selfDual;
+      byId('dual-status').textContent = selfDual ? 'Справний стан дуальний сам собі: s∗ = s.' : 'Обриви стануть КЗ, а КЗ — обривами.';
+    }
+
+    function update() {
+      const e = evaluate(states);
+      const faults = states.filter(state => state !== 'normal').length;
+      document.querySelectorAll('[data-resistor]').forEach(button => button.setAttribute('aria-pressed', String(states[Number(button.dataset.resistor)] === button.dataset.state)));
+      states.forEach((state, i) => {
+        const label = byId(`state-value-${i}`);
+        label.dataset.state = state;
+        label.textContent = state === 'open' ? '∞ · обрив' : state === 'short' ? '0 Ом · КЗ' : '4 Ом';
+      });
+      const code = states.map(state => codeOf[state]).join('');
+      document.querySelectorAll('[data-preset]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.preset === code)));
+      KEYS.forEach(key => renderCard(key, e[key]));
+      const [r1, r2, r3, r4] = e.r;
+      const joinResult = value => (rounded(value) ? ' ≈ ' : ' = ') + format(value);
+      byId('calculation-a').textContent = `(${format(r1)} + ${format(r2)}) ∥ (${format(r3)} + ${format(r4)}) = ${format(series(r1, r2))} ∥ ${format(series(r3, r4))}${joinResult(e.A.R)}`;
+      byId('calculation-b').textContent = `(${format(r1)} ∥ ${format(r2)}) + (${format(r3)} ∥ ${format(r4)}) = ${format(parallel(r1, r2))} + ${format(parallel(r3, r4))}${joinResult(e.B.R)}`;
+      const d = distribution(states);
+      const v = stateVerdict(e, faults);
+      byId('verdict').dataset.winner = v.winner;
+      byId('verdict-symbol').textContent = v.symbol;
+      byId('verdict-title').textContent = v.title;
+      byId('verdict-text').textContent = v.text;
+      const note = byId('verdict-note');
+      note.hidden = faults < 2;
+      note.textContent = faults < 2 ? '' : multiNote(v.winner, d);
+      renderDistribution(d);
+      renderDuality(e);
+    }
+
+    // Win counts over all 81 states under three measures, for the notes.
+    function metricTallies() {
+      const all = [];
+      const walk = acc => { if (acc.length === 4) { all.push(acc); return; } STATE_KEYS.forEach(state => walk([...acc, state])); };
+      walk([]);
+      const measures = {
+        lambda: R => classify(R).lambda,
+        ohm: R => Math.abs(R - TARGET),
+        siemens: R => (R === 0 ? Infinity : Math.abs(TARGET / R - 1)),
+      };
+      const tally = { n: all.length };
+      for (const [name, measure] of Object.entries(measures)) {
+        const t = { A: 0, B: 0 };
+        for (const list of all) {
+          const r = valuesOf(list);
+          const da = measure(structures.A.resistance(r)), db = measure(structures.B.resistance(r));
+          if (da === db || near(da, db)) continue;
+          t[da < db ? 'A' : 'B'] += 1;
+        }
+        tally[name] = t;
+      }
+      return tally;
+    }
+    const tallies = metricTallies();
+    byId('metric-tallies').textContent = `За всіма ${tallies.n} станами (перемоги A : B) ΔR дає ${tallies.ohm.A} : ${tallies.ohm.B}, та сама міра для провідності |G − G₀| / G₀ — ${tallies.siemens.A} : ${tallies.siemens.B}, а λ — ${tallies.lambda.A} : ${tallies.lambda.B}. Тож «загальна перевага» за ΔR — артефакт вимірювання в омах, а не властивість схем.`;
+
+    const fullscreen = byId('fullscreen');
+    if (!document.fullscreenEnabled) fullscreen.hidden = true;
+    fullscreen.addEventListener('click', async () => {
+      try {
+        if (document.fullscreenElement) await document.exitFullscreen();
+        else await document.documentElement.requestFullscreen();
+      } catch (_) {
+        byId('fullscreen-status').textContent = 'Браузер не дозволив повноекранний режим. Можна скористатися клавішею F11.';
+      }
+    });
+    document.addEventListener('fullscreenchange', () => {
+      fullscreen.textContent = document.fullscreenElement ? 'Вийти з повного екрана' : 'На весь екран';
+    });
+    update();
+
+    // ---------- Network interpretation: resistor = channel, inner node = relay agent ----------
+    // A = (R₁ + R₂) ∥ (R₃ + R₄): relays x (R₁, R₂) and y (R₃, R₄).
+    // B = (R₁ ∥ R₂) + (R₃ ∥ R₄): one relay m; R₁, R₂ join a–m, R₃, R₄ join m–b.
+    const NET = {
+      A: {
+        nodes: { a: [36, 85], x: [180, 28], y: [180, 142], b: [324, 85] },
+        relays: ['x', 'y'],
+        channels: [
+          { from: 'a', to: 'x', label: [98, 45] },
+          { from: 'x', to: 'b', label: [262, 45] },
+          { from: 'a', to: 'y', label: [98, 138] },
+          { from: 'y', to: 'b', label: [262, 138] },
+        ],
+        incident: { x: [0, 1], y: [2, 3] },
+      },
+      B: {
+        nodes: { a: [36, 85], m: [180, 85], b: [324, 85] },
+        relays: ['m'],
+        channels: [
+          { from: 'a', to: 'm', bend: -50, label: [108, 46] },
+          { from: 'a', to: 'm', bend: 50, label: [108, 134] },
+          { from: 'm', to: 'b', bend: -50, label: [252, 46] },
+          { from: 'm', to: 'b', bend: 50, label: [252, 134] },
+        ],
+        incident: { m: [0, 1, 2, 3] },
+      },
+    };
+    const PAIRS = [[0, 1], [0, 2], [0, 3], [1, 2], [1, 3], [2, 3]];
+    const net = { scenario: 'none', pair: 1 };
+    const pairLabel = ([i, j]) => `${rName(i)} і ${rName(j)}`;
+    const ends = (key, k) => `${NET[key].channels[k].from}–${NET[key].channels[k].to}`;
+    const withLost = lost => [0, 1, 2, 3].map(k => (lost.includes(k) ? Infinity : NOMINAL));
+    const survivingPairs = key => PAIRS.filter(p => Number.isFinite(structures[key].resistance(withLost(p)))).length;
+
+    function netCase(key) {
+      let lost = [], lostNode = null;
+      if (net.scenario === 'channel') lost = [0];
+      if (net.scenario === 'two') lost = PAIRS[net.pair];
+      if (net.scenario === 'relay') { lostNode = NET[key].relays[0]; lost = NET[key].incident[lostNode]; }
+      const R = structures[key].resistance(withLost(lost));
+      return { lost, lostNode, R, connected: Number.isFinite(R) };
+    }
+    function netDescription(key, c) {
+      const parts = [`Кінцеві агенти a та b; ретранслятори: ${NET[key].relays.join(', ')}.`];
+      if (c.lostNode) parts.push(`Втрачено ретранслятор ${c.lostNode} разом із каналами ${listJoin(c.lost.map(rName))}.`);
+      else if (c.lost.length) parts.push(`Втрачено ${c.lost.length > 1 ? 'канали' : 'канал'} ${listJoin(c.lost.map(rName))}.`);
+      parts.push(c.connected ? `Зв’язок є, опір між a та b ${display(c.R)} Ом.` : 'Зв’язку між a та b немає.');
+      return parts.join(' ');
+    }
+    function renderNetGraph(key, c) {
+      const g = NET[key], id = key.toLowerCase();
+      let m = `<title id="net-svg-${id}-title">Граф мережі структури ${key}</title><desc id="net-svg-${id}-desc">${netDescription(key, c)}</desc>`;
+      g.channels.forEach((ch, k) => {
+        const [x1, y1] = g.nodes[ch.from], [x2, y2] = g.nodes[ch.to];
+        const lost = c.lost.includes(k) ? ' lost' : '';
+        const d = ch.bend ? `M${x1} ${y1} Q${(x1 + x2) / 2} ${(y1 + y2) / 2 + ch.bend} ${x2} ${y2}` : `M${x1} ${y1} L${x2} ${y2}`;
+        m += `<path class="edge${lost}" d="${d}"/><text class="elabel${lost}" x="${ch.label[0]}" y="${ch.label[1]}">${rName(k)}</text>`;
+      });
+      for (const [n, [x, y]] of Object.entries(g.nodes)) {
+        const relay = g.relays.includes(n), lost = c.lostNode === n;
+        m += `<circle class="${relay ? 'relay-node' : 'terminal-node'}${lost ? ' lost' : ''}" cx="${x}" cy="${y}" r="${relay ? 16 : 14}"/>`;
+        m += lost
+          ? `<path class="cross" d="M${x - 10} ${y - 10}L${x + 10} ${y + 10}M${x + 10} ${y - 10}L${x - 10} ${y + 10}"/>`
+          : `<text class="nlabel${relay ? ' relay' : ''}" x="${x}" y="${y}">${n}</text>`;
+      }
+      byId(`net-svg-${id}`).innerHTML = m;
+    }
+    function netNote(key, c) {
+      const count = NET[key].relays.length;
+      const relays = count === 1 ? 'один ретранслятор' : count === 2 ? 'два ретранслятори' : `${count} ${plural(count, 'ретранслятор', 'ретранслятори', 'ретрансляторів')}`;
+      if (net.scenario === 'none') return `${capitalize(relays)} і чотири канали; між a та b — ${display(c.R)} Ом.`;
+      if (net.scenario === 'channel') {
+        const k = c.lost[0];
+        return `Втрачено канал ${rName(k)} (${ends(key, k)}). Опір зріс у ${times(c.R / TARGET)}: ${display(c.R)} Ом замість ${format(TARGET)}.`;
+      }
+      if (net.scenario === 'two') {
+        const n = survivingPairs(key);
+        return `${c.connected ? `Зв’язок зберігся (${display(c.R)} Ом)` : 'Зв’язок розірвано'}. За всіма ${PAIRS.length} розміщеннями зв’язок зберігається в ${n} з ${PAIRS.length}.`;
+      }
+      const rest = NET[key].relays.filter(n => n !== c.lostNode);
+      return c.connected
+        ? `Втрачено ретранслятор ${c.lostNode} разом із каналами ${listJoin(c.lost.map(rName))}. Маршрут через ${rest.join(', ')} лишився: ${display(c.R)} Ом.`
+        : `Втрачено ретранслятор ${c.lostNode} разом з усіма каналами. Через нього проходили всі маршрути, тож зв’язку немає.`;
+    }
+    function netVerdict(cs) {
+      const s = net.scenario;
+      if (s === 'none') {
+        return { winner: 'tie', symbol: '=', title: 'Функціонально A і B рівноцінні',
+          text: `Обидві дають ${display(cs.A.R)} Ом між кінцевими агентами. A потребує двох ретрансляторів, B — одного. Різниця проявляється лише під час відмов: оберіть сценарій.` };
+      }
+      if (s === 'two') {
+        const n = { A: survivingPairs('A'), B: survivingPairs('B') };
+        if (n.A === n.B) return { winner: 'tie', symbol: '=', title: 'Переваги немає', text: `Обидві зберігають зв’язок у ${n.A} з ${PAIRS.length} розміщень.` };
+        const W = n.A > n.B ? 'A' : 'B', L = other(W);
+        return { winner: W, symbol: W, title: `${W} частіше зберігає зв’язок`,
+          text: `Серед усіх ${PAIRS.length} розміщень двох утрачених каналів ${W} зберігає зв’язок у ${n[W]}, а ${L} — лише в ${n[L]}. Окреме розміщення може дати протилежний результат, тож порівнювати варто за всіма.` };
+      }
+      if (cs.A.connected !== cs.B.connected) {
+        const W = cs.A.connected ? 'A' : 'B', L = other(W);
+        const why = s === 'relay'
+          ? ` У ${L} усі маршрути проходили через один ретранслятор. Тому вимога «зберегти зв’язок після втрати будь-якого агента» відкидає ${L} ще на етапі відбору допустимих структур.`
+          : '';
+        return { winner: W, symbol: W, title: `${W} зберігає зв’язок, ${L} — ні`, text: `Опір ${W} між a та b — ${display(cs[W].R)} Ом, а структура ${L} зв’язок утратила.${why}` };
+      }
+      if (near(cs.A.R, cs.B.R)) return { winner: 'tie', symbol: '=', title: 'Однакове погіршення', text: `Опір обох — ${display(cs.A.R)} Ом.` };
+      const W = cs.A.R < cs.B.R ? 'A' : 'B', L = other(W);
+      return { winner: W, symbol: W, title: `${W} погіршується менше`,
+        text: `Опір ${W} зріс у ${times(cs[W].R / TARGET)}, ${L} — у ${times(cs[L].R / TARGET)}. Зв’язок зберігають обидві.` };
+    }
+    function renderNetwork() {
+      const cs = { A: netCase('A'), B: netCase('B') };
+      document.querySelectorAll('[data-net]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.net === net.scenario)));
+      const placements = byId('net-placements');
+      placements.hidden = net.scenario !== 'two';
+      placements.querySelectorAll('[data-pair]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.pair) === net.pair)));
+      for (const key of KEYS) {
+        const id = key.toLowerCase(), c = cs[key];
+        renderNetGraph(key, c);
+        const value = byId(`net-r-${id}`);
+        value.textContent = c.connected ? `${display(c.R)} Ом` : '∞';
+        value.dataset.value = String(c.R);
+        value.dataset.kind = c.connected ? 'ok' : 'open';
+        const tag = byId(`net-tag-${id}`);
+        tag.dataset.kind = c.connected ? (near(c.R, TARGET) ? 'target' : 'deviation') : 'open';
+        tag.textContent = c.connected ? 'Зв’язок є' : 'Зв’язку немає';
+        byId(`net-note-${id}`).textContent = netNote(key, c);
+      }
+      const v = netVerdict(cs);
+      byId('net-verdict').dataset.winner = v.winner;
+      byId('net-verdict-symbol').textContent = v.symbol;
+      byId('net-verdict-title').textContent = v.title;
+      byId('net-verdict-text').textContent = v.text;
+    }
+    byId('net-placements').innerHTML = PAIRS.map((p, i) => `<button type="button" class="preset" data-pair="${i}" aria-pressed="${i === net.pair}">${pairLabel(p)}</button>`).join('');
+    byId('net-scenarios').addEventListener('click', event => {
+      const button = event.target.closest('[data-net]');
+      if (!button) return;
+      net.scenario = button.dataset.net;
+      renderNetwork();
+    });
+    byId('net-placements').addEventListener('click', event => {
+      const button = event.target.closest('[data-pair]');
+      if (!button) return;
+      net.pair = Number(button.dataset.pair);
+      renderNetwork();
+    });
+    renderNetwork();
+  })();
+  </script>
+</body>
+</html>
