@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light">
-  <title>Одна функція — дві структури | Електрична аналогія синтезу структури мереж</title>
+  <title>Один цільовий опір — дві структури | Електрична аналогія вибору мережі</title>
   <style>
     :root {
       --ink: #182837;
@@ -22,13 +22,15 @@
     * { box-sizing: border-box; }
     body { margin: 0; background: var(--paper); color: var(--ink); font: 16px/1.5 "Segoe UI", Arial, sans-serif; }
     button { font: inherit; cursor: pointer; }
-    button:focus-visible, summary:focus-visible { outline: 3px solid #2858c5; outline-offset: 4px; }
+    button:focus-visible, summary:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid #2858c5; outline-offset: 4px; }
     button { -webkit-tap-highlight-color: transparent; }
     main { max-width: 1240px; margin: auto; padding: 24px 32px; }
     .topline { display: flex; justify-content: space-between; gap: 16px; align-items: center; margin-bottom: 18px; }
     .eyebrow { margin: 0; color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
     .quiet-button { border: 1px solid #cbd7e1; background: transparent; border-radius: 9px; padding: 8px 14px; color: var(--ink); font-size: 14px; }
     .quiet-button:hover { background: #e6edf3; }
+    .fullscreen-feedback { margin: -8px 0 16px; padding: 8px 12px; border-radius: 8px; color: var(--caution); background: var(--caution-bg); font-size: 14px; }
+    .fullscreen-feedback[hidden] { display: none; }
     .hero { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 20px; }
     h1 { font-size: clamp(28px, 3.8vw, 44px); line-height: 1.12; letter-spacing: -.035em; margin: 0 0 12px; font-weight: 700; }
     .intro { color: var(--muted); margin: 0; max-width: 720px; }
@@ -165,6 +167,12 @@
     .model-notes { max-width: 980px; }
     .model-notes p { margin: 10px 0 0; }
     .model-notes strong { color: var(--ink); }
+    .topology-table-wrap { overflow-x: auto; margin-top: 12px; }
+    .topology-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .topology-table caption { text-align: left; padding-bottom: 8px; color: var(--ink); font-weight: 600; }
+    .topology-table th, .topology-table td { padding: 7px 10px; border-top: 1px solid var(--line); text-align: left; }
+    .topology-table .target-row { background: var(--target); color: #216142; }
+    .model-notes a { color: var(--a); text-underline-offset: 2px; }
     .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
     noscript p { padding: 14px; background: #fff1e5; border: 1px solid #edcaac; border-radius: 9px; }
     .network { margin-top: 20px; }
@@ -330,24 +338,59 @@
       .dual-actions { display: none; }
       .seg, .swatch { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
+    .probability-model { margin-top: 20px; }
+    .probability-model .net-head .hint { max-width: 760px; }
+    .prob-controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin-top: 18px; }
+    .prob-control { min-width: 0; }
+    .prob-control label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 600; }
+    .prob-control output { flex-shrink: 0; color: var(--ink); font-variant-numeric: tabular-nums; }
+    .prob-control input[type="range"] { display: block; width: 100%; height: 30px; margin: 7px 0 0; accent-color: #344c60; cursor: pointer; }
+    .prob-control input:focus-visible { outline: 3px solid #2858c5; outline-offset: 3px; border-radius: 5px; }
+    .prob-results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 14px; }
+    .prob-card { --accent: var(--a); min-width: 0; border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 12px; padding: 12px 16px; }
+    .prob-card.b { --accent: var(--b); }
+    .prob-card h3 { font-size: 15px; font-weight: 650; line-height: 1.35; margin: 0; }
+    .prob-metric { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 8px 0 0; }
+    .prob-metric span { font-size: 13px; color: var(--muted); }
+    .prob-metric strong { color: var(--accent); font-size: 29px; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .prob-formula { font-size: 15px; color: var(--muted); margin: 4px 0 0; }
+    .probability-model .verdict { margin-top: 14px; padding: 14px 18px; }
+    .probability-model .verdict h3 { font-size: 17px; }
+    .probability-model .verdict .prob-difference { margin-top: 5px; font-weight: 600; }
+    .probability-model .verdict .prob-region { margin-top: 5px; font-size: 13px; overflow-wrap: anywhere; }
+    .prob-assumptions { margin-top: 12px; }
+    @media (max-width: 730px) {
+      .prob-controls, .prob-results { grid-template-columns: 1fr; }
+      .prob-card { padding: 12px 14px; }
+    }
+    @media (max-width: 400px) {
+      .prob-control label { align-items: flex-start; }
+      .prob-metric { align-items: flex-start; flex-direction: column; gap: 0; }
+      .probability-model .verdict { padding: 12px 14px; gap: 10px; }
+    }
+    @media print {
+      .probability-model .presets, .prob-control input[type="range"] { display: none; }
+      .probability-model, .prob-card, .probability-model .verdict { break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
   <main>
     <div class="topline">
-      <p class="eyebrow">Електрична аналогія синтезу структури багатоагентних мереж · інтерактивна модель</p>
+      <p class="eyebrow">Електрична аналогія вибору структури мережі · інтерактивний приклад</p>
       <button type="button" class="quiet-button" id="fullscreen">На весь екран</button>
     </div>
+    <p class="fullscreen-feedback" id="fullscreen-status" role="status" hidden></p>
     <header class="hero">
       <div>
-        <h1>Одна функція. Дві структури.</h1>
+        <h1>Один цільовий опір. Дві структури.</h1>
         <p class="intro">Чотири резистори по 4 Ом. Дві схеми з тим самим опором — різна реакція на відмови.</p>
       </div>
       <div class="target"><span>Цільовий опір</span><strong>4 Ом</strong></div>
     </header>
     <div class="method" aria-label="Ідея оберненого структурного синтезу">
-      <span><i class="step">1</i> Задаємо потрібний опір</span><b class="arrow" aria-hidden="true">→</b>
-      <span><i class="step">2</i> Знаходимо допустимі структури</span><b class="arrow" aria-hidden="true">→</b>
+      <span><i class="step">1</i> Фіксуємо ціль: 4 Ом</span><b class="arrow" aria-hidden="true">→</b>
+      <span><i class="step">2</i> Розглядаємо дві структури</span><b class="arrow" aria-hidden="true">→</b>
       <span><i class="step">3</i> Порівнюємо за відмов</span>
     </div>
     <noscript><p>Для перемикання станів і перерахунку опору увімкніть JavaScript у браузері. Модель працює без інтернету.</p></noscript>
@@ -407,8 +450,9 @@
     </section>
     <div class="analysis">
       <section class="panel" aria-labelledby="dist-title">
-        <h2 id="dist-title">Усі розміщення цього складу відмов</h2>
+        <h2 id="dist-title">Розподіл за розміщеннями відмов</h2>
         <p class="hint" id="dist-caption"></p>
+        <p class="hint">Підрахунок надає однакову вагу кожному розміщенню. Частки є ймовірностями лише за рівноймовірних розміщень.</p>
         <div class="dist-rows">
           <div class="dist-row"><span class="dist-key" aria-hidden="true">A</span><div class="dist-bar" id="dist-bar-a" role="img"></div></div>
           <div class="dist-row"><span class="dist-key b" aria-hidden="true">B</span><div class="dist-bar" id="dist-bar-b" role="img"></div></div>
@@ -423,7 +467,7 @@
       </section>
       <section class="panel" aria-labelledby="dual-title">
         <h2 id="dual-title">Дуальність A ↔ B</h2>
-        <p class="hint">Заміна послідовного з’єднання паралельним (і навпаки) разом із R&nbsp;↦&nbsp;16/R переводить A в B. Опір 4&nbsp;Ом лишається 4&nbsp;Ом, а ∞&nbsp;↔&nbsp;0, тобто обрив&nbsp;↔&nbsp;КЗ.</p>
+        <p class="hint">Заміна послідовного з’єднання паралельним (і навпаки) разом із R&nbsp;↦&nbsp;R₀²/R, де R₀&nbsp;=&nbsp;4&nbsp;Ом, переводить A в B. Опір 4&nbsp;Ом лишається 4&nbsp;Ом, а ∞&nbsp;↔&nbsp;0, тобто обрив&nbsp;↔&nbsp;КЗ.</p>
         <div class="dual-states">
           <div class="dual-line" id="dual-s"></div>
           <div class="dual-line" id="dual-s-star"></div>
@@ -434,14 +478,15 @@
           <button type="button" class="action-button" id="apply-dual">Перейти до s∗</button>
           <p class="hint" id="dual-status"></p>
         </div>
-        <p class="dual-note">Тому B реагує на обриви так само, як A — на КЗ, і навпаки. А 4&nbsp;Ом — нерухома точка R&nbsp;↦&nbsp;16/R: якщо одна схема дає ціль, дуальна теж її дає. Звідси й «одна функція — дві структури».</p>
+        <p class="dual-note">У дуальних станах s та s∗ опори взаємні відносно R₀², а логарифмічні відхилення однакові: λ<sub>A</sub>(s)&nbsp;=&nbsp;λ<sub>B</sub>(s∗). Якщо A дає 4&nbsp;Ом у стані s, B дає 4&nbsp;Ом у стані s∗. Для того самого стану s опори A і B можуть відрізнятися.</p>
       </section>
     </div>
     <section class="panel network" aria-labelledby="net-title">
       <div class="net-head">
         <div>
           <h2 id="net-title">Мережеве тлумачення: канали й агенти</h2>
-          <p class="hint">Резистор — канал зв’язку, внутрішній вузол схеми — агент-ретранслятор, клеми a та b — кінцеві агенти. Еквівалентний опір між a та b стає мірою резервування маршрутів: що більше незалежних маршрутів і що вони коротші, то він менший.</p>
+          <p class="hint">Резистор — канал зв’язку, внутрішній вузол — ретранслятор, клеми a та b — справні кінцеві агенти. Порівнюємо опір між a та b та наявність зв’язку. Опір враховує альтернативні маршрути; його рівність сама по собі не визначає пропускну здатність або затримку мережі.</p>
+          <p class="hint"><strong>Незалежний мережевий сценарій:</strong> ці перемикачі керують лише панеллю нижче й не змінюють стани резисторів угорі.</p>
         </div>
         <div class="presets" role="group" aria-label="Сценарій відмови в мережі" id="net-scenarios">
           <button type="button" class="preset" data-net="none" aria-pressed="true">Усе справне</button>
@@ -454,7 +499,7 @@
       <div class="net-cards">
         <article class="net-card a" aria-labelledby="net-a-title">
           <div class="circuit-head"><span class="structure-id">Структура A</span><span class="result-tag" id="net-tag-a" data-kind="target">Зв’язок є</span></div>
-          <h3 id="net-a-title">Два незалежні ретранслятори</h3>
+          <h3 id="net-a-title">Два маршрути через різні ретранслятори</h3>
           <svg id="net-svg-a" class="net-graph" viewBox="0 0 360 170" role="img" aria-labelledby="net-svg-a-title net-svg-a-desc"></svg>
           <p class="net-metric"><span class="metric-label">Опір між a та b</span><strong id="net-r-a">4 Ом</strong></p>
           <p class="net-note" id="net-note-a"></p>
@@ -469,25 +514,93 @@
       </div>
       <div class="verdict" id="net-verdict" data-winner="tie" aria-live="polite" aria-atomic="true">
         <div class="verdict-symbol" id="net-verdict-symbol" aria-hidden="true">=</div>
-        <div><h3 id="net-verdict-title">Функціонально A і B рівноцінні</h3><p id="net-verdict-text"></p></div>
+        <div><h3 id="net-verdict-title">A і B рівноцінні за опором між a та b</h3><p id="net-verdict-text"></p></div>
       </div>
     </section>
-    <p class="principle"><strong>Ідея синтезу:</strong> спочатку задаємо функцію, потім шукаємо структури, які її забезпечують. Серед них обираємо ту, що краще зберігає функцію за обраного сценарію відмови. Для дуальної пари A і B вибір зводиться до питання, що ймовірніше або небезпечніше: обрив чи КЗ. У мережевому тлумаченні — чого очікувати: втрати каналів (тоді краща B) чи втрати агентів (тоді краща A). Тому модель відмов має бути частиною постановки задачі.</p>
+    <section class="panel probability-model" aria-labelledby="prob-title">
+      <div class="net-head">
+        <div>
+          <h2 id="prob-title">Ймовірність зв’язку за змішаних відмов</h2>
+          <p class="hint">q — імовірність справності окремого каналу, u — окремого внутрішнього ретранслятора на обраному інтервалі. Змінюйте параметри, щоб порівняти структури за збереженням зв’язку між a та b.</p>
+        </div>
+        <div class="presets" role="group" aria-label="Приклади ймовірнісної моделі">
+          <button type="button" class="preset" data-prob-preset="channels" aria-pressed="false">Лише канали (u = 1)</button>
+          <button type="button" class="preset" data-prob-preset="relays" aria-pressed="false">Лише ретранслятори (q = 1)</button>
+          <button type="button" class="preset" data-prob-preset="mixed" aria-pressed="true">Змішані: q = 0,95; u = 0,99</button>
+        </div>
+      </div>
+      <div class="prob-controls">
+        <div class="prob-control">
+          <label for="prob-q">Справність окремого каналу q <output id="prob-q-output" for="prob-q">95%</output></label>
+          <input id="prob-q" type="range" min="0" max="1" step="0.01" value="0.95" aria-describedby="prob-assumptions" aria-valuetext="95 відсотків">
+        </div>
+        <div class="prob-control">
+          <label for="prob-u">Справність окремого ретранслятора u <output id="prob-u-output" for="prob-u">99%</output></label>
+          <input id="prob-u" type="range" min="0" max="1" step="0.01" value="0.99" aria-describedby="prob-assumptions" aria-valuetext="99 відсотків">
+        </div>
+      </div>
+      <div class="prob-results">
+        <article class="prob-card" aria-labelledby="prob-a-title">
+          <h3 id="prob-a-title">A: два ретранслятори, чотири канали</h3>
+          <p class="prob-metric"><span>Імовірність зв’язку</span><strong id="prob-a-output">98,865%</strong></p>
+          <p class="prob-formula">P<sub>A</sub> = 1 − (1 − uq<sup>2</sup>)<sup>2</sup></p>
+        </article>
+        <article class="prob-card b" aria-labelledby="prob-b-title">
+          <h3 id="prob-b-title">B: один ретранслятор, чотири канали</h3>
+          <p class="prob-metric"><span>Імовірність зв’язку</span><strong id="prob-b-output">98,506%</strong></p>
+          <p class="prob-formula">P<sub>B</sub> = u(2q − q<sup>2</sup>)<sup>2</sup></p>
+        </article>
+      </div>
+      <div class="verdict" id="prob-verdict" data-winner="A" role="status" aria-live="polite" aria-atomic="true">
+        <div class="verdict-symbol" id="prob-verdict-symbol" aria-hidden="true">A</div>
+        <div>
+          <h3 id="prob-verdict-title">A має більшу ймовірність зв’язку</h3>
+          <p id="prob-verdict-text">За q = 95% і u = 99% A частіше зберігає зв’язок між a та b.</p>
+          <p class="prob-difference" id="prob-difference">Перевага A: 0,36 відсоткового пункту.</p>
+          <p class="prob-region" id="prob-region">Для q &gt; 0 та u &gt; 0: A ≥ B ⇔ 2 − uq² ≥ (2 − q)². За цих параметрів A &gt; B.</p>
+        </div>
+      </div>
+      <p class="hint prob-assumptions" id="prob-assumptions"><strong>Припущення:</strong> усі канали мають однакову справність q, усі внутрішні ретранслятори — u; відмови всіх цих компонентів незалежні, спільних причин відмов немає. Відмова каналу означає його втрату; a та b вважаються справними. Метрика — лише наявність зв’язку, без оцінки пропускної здатності. Формули точні, відсотки округлено до трьох знаків.</p>
+      <p class="hint">Ця ймовірнісна панель незалежна від вибраних вище станів резисторів і конкретних сценаріїв втрат. Вона враховує всі комбінації втрат каналів та внутрішніх ретрансляторів, зважені їхніми ймовірностями. A використовує на один ретранслятор більше; витрати на вузли в ці ймовірності не включено.</p>
+    </section>
+    <p class="principle"><strong>Ідея синтезу:</strong> задаємо вимогу, знаходимо допустимі структури й порівнюємо їх за обраним критерієм та моделлю відмов. Тут аналізуємо дві вже задані структури з цільовим опором 4&nbsp;Ом; автоматичний пошук топологій у цій демонстрації не виконується. У показаних окремих сценаріях B краще переносить втрати каналів, A — втрату внутрішнього ретранслятора. За змішаних відмов вибір залежить від імовірностей і вимоги до мережі.</p>
     <details>
       <summary>Як працює модель</summary>
       <div class="model-notes">
         <p><strong>Послідовне з’єднання (+):</strong> опори додаються. Обрив будь-якого елемента розмикає всю гілку; коротке замикання замінює цей елемент провідником з опором 0 Ом.</p>
         <p><strong>Паралельне з’єднання (∥):</strong> для скінченних ненульових опорів R ∥ S = RS / (R + S). Розімкнена гілка не проводить струм: R ∥ ∞ = R. Короткозамкнена гілка дає 0 Ом: R ∥ 0 = 0. Дві розімкнені гілки дають ∞.</p>
-        <p><strong>Міра відхилення:</strong> λ = |ln(R<sub>екв</sub> / 4)|. Опір, удвічі більший за ціль, і опір, удвічі менший, однаково далекі від неї: λ = ln 2 ≈ 0,693, на картці — ×2 і ÷2. Обрив і КЗ між клемами мають λ = ∞. Це різні типи відмови, а не різні ступені однієї, тому, коли обидві схеми їх зазнали, переможця немає.</p>
-        <p><strong>Чому не ΔR = |R<sub>екв</sub> − 4|:</strong> така міра обмежує КЗ ста відсотками відхилення, а обрив — нескінченністю, і цим вносить власну асиметрію. <span id="metric-tallies"></span></p>
-        <p><strong>Дуальність:</strong> R<sub>A</sub>(s) · R<sub>B</sub>(s∗) = 16 Ом² для кожного з 81 стану, де s∗ — стан s із заміною обрив ↔ КЗ (0 і ∞ переходять одне в одне). Тому за незалежних відмов з однаковими ймовірностями обриву й КЗ і за допуску, симетричного в логарифмічній шкалі, A і B точно рівноцінні; перевага з’являється лише з асиметрії моделі відмов.</p>
-        <p><strong>Розміщення відмов:</strong> для однієї відмови всі позиції всередині кожної схеми рівноправні, тож порівняння «той самий стан в обох схемах» коректне. Для кількох відмов результат залежить від того, які резистори B вважати «тими самими»: наприклад, (R₁ ∥ R₃) + (R₂ ∥ R₄) — це A з перемичкою між серединами гілок. Тому розподіл рахується за всіма розміщеннями того самого складу відмов.</p>
-        <p><strong>Межі прикладу:</strong> це ідеальна резистивна модель між клемами a та b. Обрив означає ∞, коротке замикання — 0 Ом; опір проводів не враховується. Потужність оцінено лише там, де опір між клемами дорівнює 4 Ом: тоді струм не залежить від типу джерела. Нагрівання та ймовірності відмов тут не оцінюються. Дробові значення округлено до трьох знаків після коми й позначено ≈.</p>
-        <p><strong>Повнота переліку:</strong> двополюсник із чотирьох резисторів, у якому працюють усі чотири, завжди послідовно-паралельний (мостовій схемі потрібно п’ять). Таких двополюсників 10, і ціль 4 Ом дають лише A і B. Опори решти восьми — 1; 1,6; 2,4; 3; ≈ 5,333; ≈ 6,667; 10 і 16 Ом — теж утворюють дуальні пари R ↔ 16/R.</p>
-        <p><strong>Мережеве тлумачення:</strong> резистор відповідає каналу зв’язку, внутрішній вузол схеми — агенту-ретранслятору. Втрата каналу — це обрив резистора, втрата агента — видалення вузла разом з усіма його каналами. Короткому замиканню природного мережевого аналога немає: воно означало б злиття двох агентів в один. Еквівалентний опір між кінцевими агентами (resistance distance) враховує і кількість, і довжину маршрутів, а втрата каналу ніколи його не зменшує. Це не єдина можлива міра: кількість незалежних маршрутів чи довжина найкоротшого з них враховують лише частину цієї інформації. Значення на панелі рахуються тими самими формулами, що й для схем вище.</p>
+        <p><strong>Міра відхилення:</strong> λ = |ln(R<sub>екв</sub> / R₀)|, де R₀ = 4 Ом. Опір, удвічі більший за ціль, і опір, удвічі менший, однаково далекі від неї: λ = ln 2 ≈ 0,693, на картці — ×2 і ÷2. Допуск із фактором κ ≥ 1 означає R₀/κ ≤ R<sub>екв</sub> ≤ κR₀. Обрив і КЗ між клемами мають λ = ∞; за цим критерієм вони рівноцінні як невиконання вимоги, хоча фізичні наслідки залежать від застосування.</p>
+        <p><strong>Вибір критерію:</strong> λ надає однакову вагу збільшенню й зменшенню опору в однакове число разів. Абсолютна похибка ΔR = |R<sub>екв</sub> − R₀| та похибка провідності мають іншу асиметрію. Кожна з цих мір може відповідати окремій прикладній вимозі. <span id="metric-tallies"></span></p>
+        <p><strong>Дуальність:</strong> R<sub>B</sub>(s∗) = R₀²/R<sub>A</sub>(s), де R₀² = 16 Ом², а s∗ замінює обрив ↔ КЗ у стані s. Для додатних скінченних опорів R<sub>A</sub>(s) · R<sub>B</sub>(s∗) = 16 Ом². На межі застосовуємо 0 ↔ ∞; добуток 0 · ∞ не обчислюємо. Якщо відмови незалежні й для кожного резистора p<sub>обрив</sub> = p<sub>КЗ</sub>, то стани s і s∗ рівноймовірні. Тоді A та B мають однаковий розподіл λ і однакову ймовірність виконання кожного скінченного симетричного логарифмічного допуску.</p>
+        <p><strong>Розміщення відмов:</strong> для однієї відмови всі позиції всередині кожної схеми рівноправні. Для кількох відмов результат окремого порівняння залежить від нумерації: наприклад, (R₁ ∥ R₃) + (R₂ ∥ R₄) — це A з перемичкою між серединами гілок. Тому перебираємо всі розміщення того самого складу відмов. Їхні частки є умовними ймовірностями за рівноймовірних розміщень, зокрема для однакових незалежних компонентів за фіксованого складу відмов. Неоднакова надійність чи спільні причини відмов потребують інших ваг сценаріїв.</p>
+        <p><strong>Допуски в цій моделі:</strong> можливі опори 0, 2, 8/3, 4, 6, 8 та ∞ Ом; скінченні фактори відхилення — 1, 1,5 та 2. Тому повний розподіл дозволяє порівняти схеми для будь-якого скінченного симетричного допуску. Для довільних номіналів або інших топологій потрібно знову перевірити всі пороги. Для ймовірнісної задачі можна максимізувати P(λ ≤ ln κ). Середнє E[λ] буде нескінченним, якщо обрив чи КЗ між клемами мають додатну ймовірність.</p>
+        <p><strong>Потужність і межі електричної моделі:</strong> обрив означає ∞, КЗ — 0 Ом; опір проводів і нагрівання не враховуємо. При збереженні 4 Ом струм на клемах за незмінного джерела дорівнює струму справної схеми. Лише для цих станів показуємо відношення P/P₀ до початкової розсіюваної потужності кожного резистора. P/P₀ = 4 означає зростання навантаження, а перевищення паспортної потужності можна визначити тільки за відомих параметрів джерела та P<sub>max</sub>. Абсолютний струм залежить від джерела. Опори округлено до трьох знаків після коми з позначкою ≈.</p>
+        <p><strong>Повнота переліку:</strong> розглядаємо зв’язні неорієнтовані двоклемні мультиграфи без петель із чотирма нерозміченими резисторами по 4 Ом; усі чотири проводять струм за ненульової напруги між клемами. Вони послідовно-паралельні: найменший нескоротний міст потребує п’яти ребер. Існує 10 класів виразів з точністю до асоціативності та комутативності обох операцій, але <strong>11 графових топологій</strong>, якщо a і b дозволено міняти місцями, або <strong>15</strong>, якщо ролі клем фіксовані. Всі варіанти дають дев’ять різних опорів; лише A та B дають 4 Ом. Алгебраїчна перестановка послідовних блоків може змінити граф із виділеними клемами.</p>
+        <div class="topology-table-wrap">
+          <table class="topology-table">
+            <caption>11 топологій, якщо перестановка клем a ↔ b дозволена</caption>
+            <thead><tr><th scope="col">З’єднання від a до b; кожен Rᵢ = 4 Ом</th><th scope="col">Опір, Ом</th></tr></thead>
+            <tbody>
+              <tr><td>R₁ ∥ R₂ ∥ R₃ ∥ R₄</td><td>1</td></tr>
+              <tr><td>R₁ ∥ R₂ ∥ (R₃ + R₄)</td><td>8/5 = 1,6</td></tr>
+              <tr><td>R₁ ∥ [R₂ + (R₃ ∥ R₄)]</td><td>12/5 = 2,4</td></tr>
+              <tr><td>R₁ ∥ (R₂ + R₃ + R₄)</td><td>3</td></tr>
+              <tr class="target-row"><td>A: (R₁ + R₂) ∥ (R₃ + R₄)</td><td>4</td></tr>
+              <tr class="target-row"><td>B: (R₁ ∥ R₂) + (R₃ ∥ R₄)</td><td>4</td></tr>
+              <tr><td>(R₁ ∥ R₂ ∥ R₃) + R₄</td><td>16/3 ≈ 5,333</td></tr>
+              <tr><td>[R₁ ∥ (R₂ + R₃)] + R₄</td><td>20/3 ≈ 6,667</td></tr>
+              <tr><td>(R₁ ∥ R₂) + R₃ + R₄ — пара біля клеми</td><td>10</td></tr>
+              <tr><td>R₁ + (R₂ ∥ R₃) + R₄ — пара посередині</td><td>10</td></tr>
+              <tr><td>R₁ + R₂ + R₃ + R₄</td><td>16</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Останні два варіанти з 10 Ом мають степені клем {2, 1} та {1, 1}; це різні графи, хоча комутативність «+» ототожнює їхні вирази. Позначення R₁–R₄ у таблиці пояснюють побудову й не означають підрахунок усіх нумерацій резисторів.</p>
+        <p><strong>Мережеве тлумачення:</strong> канал має опір r і вагу провідності 1/r; у справному стані r = 4 Ом. Втрата каналу розмикає ребро, втрата внутрішнього ретранслятора видаляє вузол з усіма інцидентними ребрами. Кінцеві агенти a,b вважаються справними. КЗ відповідає стягненню ребра та злиттю вузлів; такий тип відмови зв’язку тут не моделюється. Ефективний опір між a та b дорівнює енергії одиничного електричного потоку; видалення каналу не зменшує цей опір. Пропускна здатність, затримка та поведінка протоколу потребують окремих моделей. Наприклад, після втрати одного каналу A має 8 Ом, B — 6 Ом, але максимальний потік за одиничних місткостей каналів в обох дорівнює 1.</p>
+        <p><strong>Ресурсні обмеження:</strong> обидві структури використовують чотири канали. A потребує двох внутрішніх ретрансляторів, B — одного. Отже порівняння фіксує бюджет каналів; при виборі реальної мережі слід також урахувати вартість вузлів. Структурно різні маршрути не гарантують статистичної незалежності відмов.</p>
+        <p><strong>Що обчислює демонстрація:</strong> прямий аналіз A/B, повний перебір станів і розміщень відмов та точні ймовірності для заданої незалежної моделі. Перелік топологій наведено як довідковий результат. Для алгоритму оберненого синтезу потрібні генерація допустимих графів, правила еквівалентності, цільова функція та ресурсні обмеження. Новий дослідницький внесок має бути сформульований і перевірений окремо від відомих властивостей цієї пари схем.</p>
       </div>
     </details>
-    <p class="sr-only" id="fullscreen-status" role="status"></p>
   </main>
   <script>
   (() => {
@@ -584,8 +697,8 @@
     const NBSP = ' ';
     const lambdaText = l => `λ${NBSP}${Number.isFinite(l) && rounded(l) ? '≈' : '='}${NBSP}${format(l)}`;
 
-    // With 4 Ω at the terminals the current equals the nominal one for any source,
-    // so the power of each resistor can be compared with its nominal power.
+    // For an unchanged source, a preserved terminal resistance preserves terminal current.
+    // Compare dissipation with each resistor's initial P0, not its rated maximum power.
     function overload(key, r, R) {
       if (!Number.isFinite(R) || !near(R, TARGET) || r.every(v => v === NOMINAL)) return null;
       const shares = structures[key].shares(r);
@@ -598,7 +711,7 @@
     function overloadSentence(o, where) {
       const who = listJoin(o.idx.map(rName));
       const head = where ? `${where} ` : '';
-      const power = `потужність, у ${times(o.ratio)} більшу за номінальну`;
+      const power = `потужність, у ${times(o.ratio)} більшу за початкову розсіювану потужність P₀`;
       if (o.whole) return `${head}весь струм іде через ${who}, і він розсіює ${power}`;
       return `${head}найбільше навантажено ${who}: ${o.idx.length > 1 ? 'вони розсіюють' : 'він розсіює'} ${power}`;
     }
@@ -649,7 +762,7 @@
       } else {
         symbol = `<rect class="symbol${over ? ' overload' : ''}" x="${x - 31}" y="${y - 12}" width="62" height="24" rx="1"/>`;
       }
-      const label = state === 'normal' ? (over ? `4 Ом · P×${format(over)}` : '4 Ом') : state === 'open' ? '∞ · обрив' : '0 Ом · КЗ';
+      const label = state === 'normal' ? (over ? `4 Ом · P/P₀=${format(over)}` : '4 Ом') : state === 'open' ? '∞ · обрив' : '0 Ом · КЗ';
       return `<g data-component="${index}" data-state="${state}"><text x="${x}" y="${y - 28}" font-weight="600">R${subs[index]}</text>${symbol}<text class="ohms ${over ? 'overload' : state}" x="${x}" y="${y + 34}">${label}</text></g>`;
     };
 
@@ -659,7 +772,7 @@
       const parts = key === 'A' ? [[0,166,76],[1,354,76],[2,166,172],[3,354,172]] : [[0,166,76],[1,166,172],[2,354,76],[3,354,172]];
       const overloaded = res.load ? res.load.idx : [];
       const description = states.map((state, i) => `R${i + 1}: ${stateNames[state]}, ${format(stateValues[state])} Ом`).join('; ');
-      const loadText = res.load ? ` Перевантажено: ${res.load.idx.map(i => `R${i + 1}`).join(', ')}, потужність ×${format(res.load.ratio)}.` : '';
+      const loadText = res.load ? ` Зросло навантаження: ${res.load.idx.map(i => `R${i + 1}`).join(', ')}, потужність у ${format(res.load.ratio)} рази більша за початкове розсіювання P₀.` : '';
       let markup = `<title id="svg-title-${id}">Електрична схема структури ${key}</title><desc id="svg-desc-${id}">${description}. Еквівалентний опір між клемами a та b: ${display(res.R)} Ом.${loadText}</desc>`;
       markup += wire('M24 124H68 M68 76V172 M452 76V172 M452 124H496');
       if (key === 'A') {
@@ -696,7 +809,7 @@
       tag.textContent = text;
       const note = byId(`note-${id}`);
       note.hidden = !res.load;
-      note.textContent = res.load ? `4 Ом лише на клемах: ${overloadSentence(res.load, '')}.` : '';
+      note.textContent = res.load ? `4 Ом на клемах: ${overloadSentence(res.load, '')}. Для перевірки допустимої потужності потрібні параметри джерела та Pmax.` : '';
       renderCircuit(key, res);
     }
 
@@ -729,7 +842,7 @@
         }
         const both = a.load && b.load && a.load.whole && b.load.whole && near(a.load.ratio, b.load.ratio);
         const detail = both
-          ? `в A весь струм іде через ${rName(a.load.idx[0])}, у B — через ${rName(b.load.idx[0])}, і кожен із них розсіює потужність, у ${times(a.load.ratio)} більшу за номінальну`
+          ? `в A весь струм іде через ${rName(a.load.idx[0])}, у B — через ${rName(b.load.idx[0])}, і кожен із них розсіює потужність, у ${times(a.load.ratio)} більшу за початкове розсіювання P₀`
           : KEYS.filter(key => e[key].load).map(key => overloadSentence(e[key].load, `у структурі ${key}`)).join('; ');
         return { winner: 'caution', symbol: '=', title: 'Обидві дають 4 Ом на клемах', text: `Відмови компенсувалися лише на клемах: ${detail}. Опір між клемами збережено, рівномірне навантаження — ні.` };
       }
@@ -810,7 +923,7 @@
           return d.n === 1 ? 'В єдиному можливому розміщенні обидві схеми втрачають функцію.' : `В усіх ${d.n} розміщеннях обидві схеми втрачають функцію (обрив або КЗ між клемами).`;
         }
         const mirror = d.single || d.nOpen === d.nShort;
-        return 'За жодного допуску переваги немає.' + (mirror ? ` Розподіли дзеркальні (R${NBSP}↦${NBSP}16/R), бо заміна обрив${NBSP}↔${NBSP}КЗ переводить цей набір відмов сам у себе.` : '');
+        return 'Для всіх скінченних симетричних допусків частки однакові.' + (mirror ? ` Розподіли дзеркальні (R${NBSP}↦${NBSP}R₀²/R), бо заміна обрив${NBSP}↔${NBSP}КЗ переводить цей набір відмов сам у себе.` : '');
       }
       if (d.winner === 'mixed') {
         const iA = A.findIndex((v, k) => v > B[k]), iB = B.findIndex((v, k) => v > A[k]);
@@ -818,7 +931,7 @@
       }
       const W = d.winner, L = other(W), w = d.levels[W], l = d.levels[L];
       const i = w.findIndex((v, k) => v > l[k]);
-      return `${W} не гірша за ${L} за будь-якого допуску й ${LEVEL_DOES[i]}: ${w[i]} з ${d.n} розміщень проти ${l[i]}.`;
+      return `За рівних ваг розміщень ${W} не гірша за ${L} для кожного скінченного симетричного допуску й ${LEVEL_DOES[i]}: ${w[i]} з ${d.n} розміщень проти ${l[i]}.`;
     }
     function multiNote(stateWinner, d) {
       const base = 'Для кількох відмов результат окремого стану залежить від того, як занумеровано резистори в B. ';
@@ -937,20 +1050,26 @@
       return tally;
     }
     const tallies = metricTallies();
-    byId('metric-tallies').textContent = `За всіма ${tallies.n} станами (перемоги A : B) ΔR дає ${tallies.ohm.A} : ${tallies.ohm.B}, та сама міра для провідності |G − G₀| / G₀ — ${tallies.siemens.A} : ${tallies.siemens.B}, а λ — ${tallies.lambda.A} : ${tallies.lambda.B}. Тож «загальна перевага» за ΔR — артефакт вимірювання в омах, а не властивість схем.`;
+    byId('metric-tallies').textContent = `За всіма ${tallies.n} станами з однаковою вагою (перемоги A : B) ΔR дає ${tallies.ohm.A} : ${tallies.ohm.B}, відносна похибка провідності |G − G₀| / G₀ — ${tallies.siemens.A} : ${tallies.siemens.B}, а λ — ${tallies.lambda.A} : ${tallies.lambda.B}. Ранжування залежить від функції втрат; критерій слід обрати відповідно до вимог застосування.`;
 
     const fullscreen = byId('fullscreen');
+    const fullscreenStatus = byId('fullscreen-status');
     if (!document.fullscreenEnabled) fullscreen.hidden = true;
     fullscreen.addEventListener('click', async () => {
+      fullscreenStatus.hidden = true;
+      fullscreenStatus.textContent = '';
       try {
         if (document.fullscreenElement) await document.exitFullscreen();
         else await document.documentElement.requestFullscreen();
       } catch (_) {
-        byId('fullscreen-status').textContent = 'Браузер не дозволив повноекранний режим. Можна скористатися клавішею F11.';
+        fullscreenStatus.textContent = 'Браузер не дозволив повноекранний режим. На комп’ютері можна скористатися клавішею F11 або меню браузера.';
+        fullscreenStatus.hidden = false;
       }
     });
     document.addEventListener('fullscreenchange', () => {
       fullscreen.textContent = document.fullscreenElement ? 'Вийти з повного екрана' : 'На весь екран';
+      fullscreenStatus.hidden = true;
+      fullscreenStatus.textContent = '';
     });
     update();
 
@@ -1041,20 +1160,20 @@
     function netVerdict(cs) {
       const s = net.scenario;
       if (s === 'none') {
-        return { winner: 'tie', symbol: '=', title: 'Функціонально A і B рівноцінні',
-          text: `Обидві дають ${display(cs.A.R)} Ом між кінцевими агентами. A потребує двох ретрансляторів, B — одного. Різниця проявляється лише під час відмов: оберіть сценарій.` };
+        return { winner: 'tie', symbol: '=', title: 'A і B рівноцінні за опором між a та b',
+          text: `Обидві дають ${display(cs.A.R)} Ом і мають чотири канали. A потребує двох ретрансляторів, B — одного. Порівнюємо за однакового числа каналів; бюджет вузлів різний. Оберіть сценарій відмови.` };
       }
       if (s === 'two') {
         const n = { A: survivingPairs('A'), B: survivingPairs('B') };
         if (n.A === n.B) return { winner: 'tie', symbol: '=', title: 'Переваги немає', text: `Обидві зберігають зв’язок у ${n.A} з ${PAIRS.length} розміщень.` };
         const W = n.A > n.B ? 'A' : 'B', L = other(W);
         return { winner: W, symbol: W, title: `${W} частіше зберігає зв’язок`,
-          text: `Серед усіх ${PAIRS.length} розміщень двох утрачених каналів ${W} зберігає зв’язок у ${n[W]}, а ${L} — лише в ${n[L]}. Окреме розміщення може дати протилежний результат, тож порівнювати варто за всіма.` };
+          text: `Серед усіх ${PAIRS.length} розміщень двох утрачених каналів ${W} зберігає зв’язок у ${n[W]}, а ${L} — у ${n[L]}. Частки є ймовірностями за рівноймовірних розміщень. Окреме розміщення може дати протилежний результат.` };
       }
       if (cs.A.connected !== cs.B.connected) {
         const W = cs.A.connected ? 'A' : 'B', L = other(W);
         const why = s === 'relay'
-          ? ` У ${L} усі маршрути проходили через один ретранслятор. Тому вимога «зберегти зв’язок після втрати будь-якого агента» відкидає ${L} ще на етапі відбору допустимих структур.`
+          ? ` У ${L} усі маршрути проходили через один ретранслятор. Вимога «зберегти зв’язок після втрати будь-якого внутрішнього ретранслятора» відкидає ${L}. Кінцеві агенти a та b вважаються справними; ${W} використовує на один ретранслятор більше.`
           : '';
         return { winner: W, symbol: W, title: `${W} зберігає зв’язок, ${L} — ні`, text: `Опір ${W} між a та b — ${display(cs[W].R)} Ом, а структура ${L} зв’язок утратила.${why}` };
       }
@@ -1101,6 +1220,100 @@
       renderNetwork();
     });
     renderNetwork();
+    // Exact terminal connectivity probabilities for independent component losses.
+    // This nested scope can be inserted inside the existing page IIFE.
+    (() => {
+      const probabilityInputs = { q: byId('prob-q'), u: byId('prob-u') };
+      const probabilityDefaults = { q: 0.95, u: 0.99 };
+      const probabilityPresets = {
+        channels: { q: 0.95, u: 1 },
+        relays: { q: 1, u: 0.99 },
+        mixed: { q: 0.95, u: 0.99 },
+      };
+      const probabilityPercent = new Intl.NumberFormat('uk-UA', {
+        style: 'percent', maximumFractionDigits: 3,
+      });
+      const probabilityPoints = new Intl.NumberFormat('uk-UA', { maximumFractionDigits: 3 });
+      const probabilityParameters = new Intl.NumberFormat('uk-UA', {
+        style: 'percent', maximumFractionDigits: 0,
+      });
+      const probabilityPresetButtons = document.querySelectorAll('[data-prob-preset]');
+      const probabilityClamp = value => Math.min(1, Math.max(0, value));
+
+      function describeProbabilityPoints(value) {
+        if (value < 0.0005) return 'менше 0,001 відсоткового пункту';
+        const roundedPoints = Math.round(value * 1000) / 1000;
+        const last = roundedPoints % 10, lastTwo = roundedPoints % 100;
+        const unit = !Number.isInteger(roundedPoints) ? 'відсоткового пункту'
+          : last === 1 && lastTwo !== 11 ? 'відсотковий пункт'
+          : last >= 2 && last <= 4 && (lastTwo < 12 || lastTwo > 14) ? 'відсоткові пункти'
+          : 'відсоткових пунктів';
+        return `${probabilityPoints.format(value)} ${unit}`;
+      }
+
+      function readProbabilityParameter(name) {
+        const input = probabilityInputs[name];
+        const raw = Number(input.value);
+        const value = probabilityClamp(Number.isFinite(raw) ? raw : probabilityDefaults[name]);
+        input.value = String(value);
+        return value;
+      }
+
+      function renderProbabilityModel() {
+        const q = readProbabilityParameter('q'), u = readProbabilityParameter('u');
+        // Algebraically equivalent to 1 - (1 - u*q*q)^2, with less cancellation near zero.
+        const branchWorks = u * q * q;
+        const pa = probabilityClamp(branchWorks * (2 - branchWorks));
+        const leftOrRightWorks = q * (2 - q);
+        const pb = probabilityClamp(u * leftOrRightWorks * leftOrRightWorks);
+        const difference = pa - pb;
+        const tied = Math.abs(difference) < 1e-12;
+        const winner = tied ? 'tie' : difference > 0 ? 'A' : 'B';
+
+        for (const [name, value] of Object.entries({ q, u })) {
+          const label = probabilityParameters.format(value);
+          byId(`prob-${name}-output`).textContent = label;
+          probabilityInputs[name].setAttribute('aria-valuetext', label);
+        }
+        byId('prob-a-output').textContent = probabilityPercent.format(pa);
+        byId('prob-b-output').textContent = probabilityPercent.format(pb);
+        // Machine-readable values preserve precision beyond the displayed rounding.
+        byId('prob-a-output').dataset.value = String(pa);
+        byId('prob-b-output').dataset.value = String(pb);
+        byId('prob-difference').dataset.value = String(difference);
+        byId('prob-verdict').dataset.winner = winner;
+        byId('prob-verdict-symbol').textContent = tied ? '=' : winner;
+        byId('prob-verdict-title').textContent = tied
+          ? 'Однакова ймовірність зв’язку'
+          : `${winner} має більшу ймовірність зв’язку`;
+        byId('prob-verdict-text').textContent = tied
+          ? `За q = ${probabilityParameters.format(q)} і u = ${probabilityParameters.format(u)} обидві структури зберігають зв’язок з однаковою ймовірністю.`
+          : `За q = ${probabilityParameters.format(q)} і u = ${probabilityParameters.format(u)} ${winner} частіше зберігає зв’язок між a та b.`;
+        byId('prob-difference').textContent = tied
+          ? 'Різниця: 0 відсоткових пунктів.'
+          : `Перевага ${winner}: ${describeProbabilityPoints(Math.abs(difference) * 100)}.`;
+        byId('prob-region').textContent = q === 0 || u === 0
+          ? 'За q = 0 або u = 0: P_A = P_B = 0. Умова області переваги для q > 0 та u > 0 тут не застосовується.'
+          : `Для q > 0 та u > 0: A ≥ B ⇔ 2 − uq² ≥ (2 − q)². За цих параметрів ${tied ? 'A = B' : winner === 'A' ? 'A > B' : 'A < B'}.`;
+        probabilityPresetButtons.forEach(button => {
+          const preset = probabilityPresets[button.dataset.probPreset];
+          button.setAttribute('aria-pressed', String(Boolean(preset &&
+            Math.abs(q - preset.q) < 1e-12 && Math.abs(u - preset.u) < 1e-12)));
+        });
+      }
+
+      for (const input of Object.values(probabilityInputs)) {
+        input.addEventListener('input', renderProbabilityModel);
+      }
+      probabilityPresetButtons.forEach(button => button.addEventListener('click', () => {
+        const preset = probabilityPresets[button.dataset.probPreset];
+        if (!preset) return;
+        probabilityInputs.q.value = String(preset.q);
+        probabilityInputs.u.value = String(preset.u);
+        renderProbabilityModel();
+      }));
+      renderProbabilityModel();
+    })();
   })();
   </script>
 </body>
